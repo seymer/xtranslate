@@ -3,58 +3,51 @@
 <head>
   <meta charset="utf-8" />
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       width: 240px;
       margin: 0;
-      padding: 14px 16px;
+      padding: 12px 14px;
       font-family: -apple-system, "Segoe UI", "PingFang SC", sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       color: #e7e9ea;
       background: #15202b;
     }
-    .row {
+    .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 10px;
     }
-    .row:last-of-type {
-      margin-bottom: 0;
+    .title {
+      font-size: 14px;
+      font-weight: 600;
     }
-    label {
+    .lang-group {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      gap: 2px;
+    }
+    .lang-btn {
+      padding: 2px 6px;
+      font-size: 11px;
+      font-family: inherit;
+      color: #71767b;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
       cursor: pointer;
-      user-select: none;
+      transition: all 0.15s;
     }
-    input[type="checkbox"] {
-      width: 34px;
-      height: 19px;
-      appearance: none;
-      background: #536471;
-      border-radius: 999px;
-      position: relative;
-      cursor: pointer;
-      transition: background 0.2s;
-      margin: 0;
+    .lang-btn:hover {
+      color: #e7e9ea;
+      border-color: #38444d;
     }
-    input[type="checkbox"]::before {
-      content: "";
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 15px;
-      height: 15px;
-      background: #fff;
-      border-radius: 50%;
-      transition: left 0.2s;
-    }
-    input[type="checkbox"]:checked {
-      background: #1d9bf0;
-    }
-    input[type="checkbox"]:checked::before {
-      left: 17px;
+    .lang-btn.active {
+      color: #1d9bf0;
+      border-color: #1d9bf0;
+      background: rgba(29, 155, 240, 0.12);
     }
     .mode-group {
       display: flex;
@@ -63,7 +56,7 @@
     }
     .mode-btn {
       flex: 1;
-      padding: 8px 6px;
+      padding: 7px 6px;
       text-align: center;
       font-size: 13px;
       border: 1px solid #38444d;
@@ -83,34 +76,108 @@
       border-color: #1d9bf0;
       color: #1d9bf0;
     }
-    .hint {
-      margin: 12px 0 0;
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-top: 1px solid #2f3d4a;
+    }
+    .row label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      cursor: pointer;
+      user-select: none;
+    }
+    select {
+      min-width: 0;
+      padding: 4px 6px;
+      font-family: inherit;
       font-size: 12px;
+      color: #e7e9ea;
+      background: #1c2733;
+      border: 1px solid #38444d;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    input[type="checkbox"] {
+      width: 32px;
+      height: 18px;
+      appearance: none;
+      background: #536471;
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin: 0;
+      flex: none;
+    }
+    input[type="checkbox"]::before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border-radius: 50%;
+      transition: left 0.2s;
+    }
+    input[type="checkbox"]:checked {
+      background: #1d9bf0;
+    }
+    input[type="checkbox"]:checked::before {
+      left: 16px;
+    }
+    .hint {
+      margin: 8px 0 0;
+      padding: 0;
+      font-size: 11px;
       color: #71767b;
-      line-height: 1.5;
+      line-height: 1.6;
     }
     kbd {
       background: #273340;
       border-radius: 4px;
-      padding: 1px 5px;
+      padding: 0 4px;
       font-family: inherit;
     }
   </style>
 </head>
 <body>
+  <div class="header">
+    <span class="title" data-i18n="popupTitle">X 双语对照翻译</span>
+    <div class="lang-group">
+      <button class="lang-btn" data-lang="zh_CN">中文</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+  </div>
+  <div class="mode-group">
+    <button class="mode-btn" data-mode="interleave" data-i18n="modeInterleave">逐句</button>
+    <button class="mode-btn" data-mode="block" data-i18n="modeBlock">整块</button>
+  </div>
   <div class="row">
     <label for="toggle">
-      <span data-i18n="toggleLabel">双语对照模式</span>
+      <span data-i18n="toggleLabel">双语对照</span>
       <input type="checkbox" id="toggle" />
     </label>
   </div>
-  <div class="mode-group">
-    <button class="mode-btn" data-mode="interleave" data-i18n="modeInterleave">逐句对照</button>
-    <button class="mode-btn" data-mode="block" data-i18n="modeBlock">整块对照</button>
+  <div class="row">
+    <label for="transColor">
+      <span data-i18n="transColorLabel">译文颜色</span>
+      <select id="transColor">
+        <option value="default" data-i18n="colorDefault">默认灰</option>
+        <option value="text" data-i18n="colorText">跟随正文</option>
+        <option value="blue" data-i18n="colorBlue">蓝色</option>
+        <option value="green" data-i18n="colorGreen">绿色</option>
+      </select>
+    </label>
   </div>
   <p class="hint">
-    <span data-i18n="hintToggle">快捷键切换：</span><kbd>Alt</kbd> + <kbd>B</kbd><br />
-    <span data-i18n="hintCollapse">点击译文上方的「翻译自 xxx」可折叠译文。</span>
+    <span data-i18n="hintToggle">快捷键：</span><kbd>Alt</kbd> + <kbd>B</kbd><br />
+    <span data-i18n="hintCollapse">点「翻译自 xxx」可折叠译文。</span>
   </p>
   <script src="popup.js"></script>
 </body>

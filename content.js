@@ -438,7 +438,34 @@
 
   /* ==================== 构建双语块 ==================== */
 
-  const FOLD_HINT = chrome.i18n.getMessage('foldTitle') || '点击折叠 / 展开译文';
+  const FOLD_TITLES = {
+    zh_CN: '点击折叠 / 展开译文',
+    en: 'Click to collapse / expand translation',
+  };
+  let FOLD_HINT = FOLD_TITLES.zh_CN;
+  /** 按存储中的手动语言更新折叠提示（null=跟随浏览器） */
+  function applyFoldTitle(lang) {
+    if (lang && lang !== 'auto') FOLD_HINT = FOLD_TITLES[lang] || FOLD_HINT;
+    else FOLD_HINT = chrome.i18n.getMessage('foldTitle') || FOLD_TITLES.zh_CN;
+    document.querySelectorAll('.xtl-note').forEach((n) => { n.title = FOLD_HINT; });
+  }
+
+  /* ==================== 译文颜色设置 ==================== */
+  // 每种预设的亮色/暗色变体（均满足 WCAG AA 对比度）
+  const TRAN_COLORS = {
+    default: { light: null, dark: null },                      // 保持 CSS 默认灰
+    text: { light: 'rgb(15, 20, 25)', dark: 'rgb(231, 233, 234)' },   // 跟随正文
+    blue: { light: 'rgb(13, 97, 204)', dark: 'rgb(108, 178, 238)' },  // 蓝
+    green: { light: 'rgb(20, 112, 76)', dark: 'rgb(94, 192, 138)' },  // 绿
+  };
+  function applyTransColor(name) {
+    const c = TRAN_COLORS[name] || TRAN_COLORS.default;
+    const root = document.documentElement;
+    if (c.light) root.style.setProperty('--xtl-trans-color', c.light);
+    else root.style.removeProperty('--xtl-trans-color');
+    if (c.dark) root.style.setProperty('--xtl-trans-color-dark', c.dark);
+    else root.style.removeProperty('--xtl-trans-color-dark');
+  }
 
   function createBlockWrap(rec, bodyClass, bodyHTML) {
     const block = document.createElement('div');
@@ -863,9 +890,12 @@
   }
   setInterval(cleanupExpiredEntries, 15000);
 
-  chrome.storage.local.get(['enabled', 'mode'], (d) => {
+  chrome.storage.local.get(['enabled', 'mode', 'transColor', 'lang'], (d) => {
     enabled = d.enabled !== false;
     mode = d.mode === 'block' ? 'block' : 'interleave';
+    applyTransColor(d.transColor);
+    applyFoldTitle(d.lang);
+    initialized = true;
     dbg('init: storage loaded', { enabled, mode });
     scheduleScan();
   });
@@ -888,10 +918,11 @@
         if (enabled) rebuildAll();
       }
     }
-  });
-
-  chrome.runtime.onMessage.addListener((msg) => {
-    if (!msg || !msg.type) return;
-    dbg('message:', msg.type, msg);
+    if (changes.transColor) {
+      applyTransColor(changes.transColor.newValue);
+    }
+    if (changes.lang) {
+      applyFoldTitle(changes.lang.newValue);
+    }
   });
 })();

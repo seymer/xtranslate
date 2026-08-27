@@ -11,32 +11,56 @@
     "message": "X 双语对照翻译",
     "description": "工具栏按钮标题"
   },
+  "popupTitle": {
+    "message": "X 双语对照",
+    "description": "弹窗标题（短文案）"
+  },
   "cmdToggleDesc": {
     "message": "开启 / 关闭双语模式",
     "description": "快捷键命令描述"
   },
   "toggleLabel": {
-    "message": "双语对照模式",
+    "message": "双语对照",
     "description": "弹窗开关标签"
   },
   "modeInterleave": {
-    "message": "逐句对照",
+    "message": "逐句",
     "description": "逐句对照模式按钮"
   },
   "modeBlock": {
-    "message": "整块对照",
+    "message": "整块",
     "description": "整块对照模式按钮"
   },
   "hintToggle": {
-    "message": "快捷键切换：Alt + B",
+    "message": "快捷键：",
     "description": "弹窗快捷键提示"
   },
   "hintCollapse": {
-    "message": "点击译文上方的「翻译自 xxx」可折叠译文。",
+    "message": "点「翻译自 xxx」可折叠译文。",
     "description": "弹窗折叠提示"
   },
   "foldTitle": {
     "message": "点击折叠 / 展开译文",
     "description": "译文标题栏悬停提示"
+  },
+  "transColorLabel": {
+    "message": "译文颜色",
+    "description": "译文颜色设置标签"
+  },
+  "colorDefault": {
+    "message": "默认灰",
+    "description": "颜色预设：默认灰"
+  },
+  "colorText": {
+    "message": "跟随正文",
+    "description": "颜色预设：跟随正文"
+  },
+  "colorBlue": {
+    "message": "蓝色",
+    "description": "颜色预设：蓝色"
+  },
+  "colorGreen": {
+    "message": "绿色",
+    "description": "颜色预设：绿色"
   }
 }

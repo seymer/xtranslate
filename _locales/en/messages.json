@@ -11,32 +11,56 @@
     "message": "X Bilingual Translation",
     "description": "Toolbar button title"
   },
+  "popupTitle": {
+    "message": "X Bilingual",
+    "description": "Popup title (short)"
+  },
   "cmdToggleDesc": {
     "message": "Toggle bilingual mode",
     "description": "Keyboard shortcut command description"
   },
   "toggleLabel": {
-    "message": "Bilingual mode",
+    "message": "Bilingual",
     "description": "Popup toggle label"
   },
   "modeInterleave": {
-    "message": "Sentence by sentence",
+    "message": "Sentence",
     "description": "Interleave mode button"
   },
   "modeBlock": {
-    "message": "Whole block",
+    "message": "Paragraph",
     "description": "Block mode button"
   },
   "hintToggle": {
-    "message": "Shortcut: Alt + B",
+    "message": "Shortcut:",
     "description": "Popup shortcut hint"
   },
   "hintCollapse": {
-    "message": "Click \"Translated from xxx\" above the translation to collapse it.",
+    "message": "Click \"Translated from xxx\" to collapse.",
     "description": "Popup collapse hint"
   },
   "foldTitle": {
     "message": "Click to collapse / expand translation",
     "description": "Translation header hover tooltip"
+  },
+  "transColorLabel": {
+    "message": "Translation color",
+    "description": "Translation color setting label"
+  },
+  "colorDefault": {
+    "message": "Default gray",
+    "description": "Color preset: default gray"
+  },
+  "colorText": {
+    "message": "Match text",
+    "description": "Color preset: match body text"
+  },
+  "colorBlue": {
+    "message": "Blue",
+    "description": "Color preset: blue"
+  },
+  "colorGreen": {
+    "message": "Green",
+    "description": "Color preset: green"
   }
 }
