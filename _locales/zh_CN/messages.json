@@ -1,0 +1,42 @@
+{
+  "extName": {
+    "message": "X 双语对照翻译",
+    "description": "扩展名称"
+  },
+  "extDesc": {
+    "message": "让 X (x.com) 的官方自动翻译以「原文 + 译文」双语对照形式显示。复用官方翻译结果，不调用第三方 API。",
+    "description": "扩展描述"
+  },
+  "extTitle": {
+    "message": "X 双语对照翻译",
+    "description": "工具栏按钮标题"
+  },
+  "cmdToggleDesc": {
+    "message": "开启 / 关闭双语模式",
+    "description": "快捷键命令描述"
+  },
+  "toggleLabel": {
+    "message": "双语对照模式",
+    "description": "弹窗开关标签"
+  },
+  "modeInterleave": {
+    "message": "逐句对照",
+    "description": "逐句对照模式按钮"
+  },
+  "modeBlock": {
+    "message": "整块对照",
+    "description": "整块对照模式按钮"
+  },
+  "hintToggle": {
+    "message": "快捷键切换：Alt + B",
+    "description": "弹窗快捷键提示"
+  },
+  "hintCollapse": {
+    "message": "点击译文上方的「翻译自 xxx」可折叠译文。",
+    "description": "弹窗折叠提示"
+  },
+  "foldTitle": {
+    "message": "点击折叠 / 展开译文",
+    "description": "译文标题栏悬停提示"
+  }
+}

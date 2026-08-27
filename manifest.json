@@ -1,8 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "X 双语对照翻译",
+  "name": "__MSG_extName__",
   "version": "1.0.0",
-  "description": "让 X (x.com) 的官方自动翻译以「原文 + 译文」双语对照形式显示。复用官方翻译结果，不调用第三方 API。",
+  "description": "__MSG_extDesc__",
+  "default_locale": "zh_CN",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": ["storage", "activeTab"],
   "host_permissions": [
     "https://x.com/*",
@@ -13,7 +20,13 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "X 双语对照翻译"
+    "default_title": "__MSG_extTitle__",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "content_scripts": [
     {
@@ -28,7 +41,7 @@
       "suggested_key": {
         "default": "Alt+B"
       },
-      "description": "开启 / 关闭双语模式"
+      "description": "__MSG_cmdToggleDesc__"
     }
   }
 }

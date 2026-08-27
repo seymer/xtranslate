@@ -2,6 +2,13 @@
 const toggle = document.getElementById('toggle');
 const modeBtns = document.querySelectorAll('.mode-btn');
 
+// 本地化：替换 data-i18n 元素的文本
+document.querySelectorAll('[data-i18n]').forEach((el) => {
+  const key = el.dataset.i18n;
+  const msg = chrome.i18n.getMessage(key);
+  if (msg) el.textContent = msg;
+});
+
 // 初始化：读取当前状态（默认开启 + 逐句模式）
 chrome.storage.local.get(['enabled', 'mode'], (d) => {
   toggle.checked = d.enabled !== false;

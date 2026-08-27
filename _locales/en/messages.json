@@ -1,0 +1,42 @@
+{
+  "extName": {
+    "message": "X Bilingual Translation",
+    "description": "Extension name"
+  },
+  "extDesc": {
+    "message": "Display X (x.com) official auto-translations side-by-side as bilingual comparison. Reuses X's own translation, no third-party API.",
+    "description": "Extension description"
+  },
+  "extTitle": {
+    "message": "X Bilingual Translation",
+    "description": "Toolbar button title"
+  },
+  "cmdToggleDesc": {
+    "message": "Toggle bilingual mode",
+    "description": "Keyboard shortcut command description"
+  },
+  "toggleLabel": {
+    "message": "Bilingual mode",
+    "description": "Popup toggle label"
+  },
+  "modeInterleave": {
+    "message": "Sentence by sentence",
+    "description": "Interleave mode button"
+  },
+  "modeBlock": {
+    "message": "Whole block",
+    "description": "Block mode button"
+  },
+  "hintToggle": {
+    "message": "Shortcut: Alt + B",
+    "description": "Popup shortcut hint"
+  },
+  "hintCollapse": {
+    "message": "Click \"Translated from xxx\" above the translation to collapse it.",
+    "description": "Popup collapse hint"
+  },
+  "foldTitle": {
+    "message": "Click to collapse / expand translation",
+    "description": "Translation header hover tooltip"
+  }
+}

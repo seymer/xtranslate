@@ -210,7 +210,7 @@
       const n = document.createElement('div');
       n.className = 'xtl-note';
       n.textContent = note;
-      n.title = '点击折叠 / 展开译文';
+      n.title = FOLD_HINT;
       container.appendChild(n);
     }
     origParas.forEach((origPara, pi) => {
@@ -438,6 +438,8 @@
 
   /* ==================== 构建双语块 ==================== */
 
+  const FOLD_HINT = chrome.i18n.getMessage('foldTitle') || '点击折叠 / 展开译文';
+
   function createBlockWrap(rec, bodyClass, bodyHTML) {
     const block = document.createElement('div');
     block.className = 'xtl-wrap';
@@ -445,7 +447,7 @@
       const n = document.createElement('div');
       n.className = 'xtl-note';
       n.textContent = rec.note;
-      n.title = '点击折叠 / 展开译文';
+      n.title = FOLD_HINT;
       block.appendChild(n);
     }
     const body = document.createElement('div');

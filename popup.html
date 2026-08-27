@@ -100,17 +100,17 @@
 <body>
   <div class="row">
     <label for="toggle">
-      <span>双语对照模式</span>
+      <span data-i18n="toggleLabel">双语对照模式</span>
       <input type="checkbox" id="toggle" />
     </label>
   </div>
   <div class="mode-group">
-    <button class="mode-btn" data-mode="interleave">逐句对照</button>
-    <button class="mode-btn" data-mode="block">整块对照</button>
+    <button class="mode-btn" data-mode="interleave" data-i18n="modeInterleave">逐句对照</button>
+    <button class="mode-btn" data-mode="block" data-i18n="modeBlock">整块对照</button>
   </div>
   <p class="hint">
-    快捷键切换：<kbd>Alt</kbd> + <kbd>B</kbd><br />
-    点击译文上方的「翻译自 xxx」可折叠译文。
+    <span data-i18n="hintToggle">快捷键切换：</span><kbd>Alt</kbd> + <kbd>B</kbd><br />
+    <span data-i18n="hintCollapse">点击译文上方的「翻译自 xxx」可折叠译文。</span>
   </p>
   <script src="popup.js"></script>
 </body>
