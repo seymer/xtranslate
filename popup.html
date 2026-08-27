@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body {
+      width: 240px;
+      margin: 0;
+      padding: 14px 16px;
+      font-family: -apple-system, "Segoe UI", "PingFang SC", sans-serif;
+      font-size: 14px;
+      color: #e7e9ea;
+      background: #15202b;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .row:last-of-type {
+      margin-bottom: 0;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    input[type="checkbox"] {
+      width: 34px;
+      height: 19px;
+      appearance: none;
+      background: #536471;
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin: 0;
+    }
+    input[type="checkbox"]::before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 15px;
+      height: 15px;
+      background: #fff;
+      border-radius: 50%;
+      transition: left 0.2s;
+    }
+    input[type="checkbox"]:checked {
+      background: #1d9bf0;
+    }
+    input[type="checkbox"]:checked::before {
+      left: 17px;
+    }
+    .mode-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 8px 6px;
+      text-align: center;
+      font-size: 13px;
+      border: 1px solid #38444d;
+      border-radius: 8px;
+      background: transparent;
+      color: #71767b;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .mode-btn:hover {
+      border-color: #1d9bf0;
+      color: #e7e9ea;
+    }
+    .mode-btn.active {
+      background: rgba(29, 155, 240, 0.15);
+      border-color: #1d9bf0;
+      color: #1d9bf0;
+    }
+    .hint {
+      margin: 12px 0 0;
+      font-size: 12px;
+      color: #71767b;
+      line-height: 1.5;
+    }
+    kbd {
+      background: #273340;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="row">
+    <label for="toggle">
+      <span>双语对照模式</span>
+      <input type="checkbox" id="toggle" />
+    </label>
+  </div>
+  <div class="mode-group">
+    <button class="mode-btn" data-mode="interleave">逐句对照</button>
+    <button class="mode-btn" data-mode="block">整块对照</button>
+  </div>
+  <p class="hint">
+    快捷键切换：<kbd>Alt</kbd> + <kbd>B</kbd><br />
+    点击译文上方的「翻译自 xxx」可折叠译文。
+  </p>
+  <script src="popup.js"></script>
+</body>
+</html>

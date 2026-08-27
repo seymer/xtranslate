@@ -1,0 +1,120 @@
+/* X 双语对照翻译 - 译文块样式 */
+
+.xtl-wrap {
+  margin-top: 2px;
+  padding-left: 10px;
+  border-left: 3px solid rgba(29, 155, 240, 0.45);
+}
+
+/* 「翻译自 xxx」说明行，点击可折叠译文 */
+.xtl-note {
+  color: rgb(100, 116, 139);     /* slate-500: 4.64:1 on white, 5.08:1 on #15202b */
+  font-size: 13px;
+  line-height: 18px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  user-select: none;
+}
+@media (prefers-color-scheme: dark) {
+  .xtl-note {
+    color: rgb(148, 163, 184);   /* slate-300: 5.95:1 on #15202b */
+  }
+}
+
+/* 译文正文：与上方原文明显区分 */
+.xtl-trans {
+  color: rgb(100, 116, 139);     /* slate-500: 4.64:1 on white */
+  font-size: 15px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+@media (prefers-color-scheme: dark) {
+  .xtl-trans {
+    color: rgb(148, 163, 184);   /* slate-300: 5.95:1 on #15202b */
+  }
+}
+
+/* 简介双语块：原文 + 译文 */
+.xtl-interleave-orig {
+  color: rgb(15, 20, 25);
+  font-size: 15px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+@media (prefers-color-scheme: dark) {
+  .xtl-interleave-orig {
+    color: rgb(231, 233, 234);
+  }
+}
+.xtl-interleave-trans {
+  color: rgb(100, 116, 139);
+  font-size: 15px;
+  line-height: 20px;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+@media (prefers-color-scheme: dark) {
+  .xtl-interleave-trans {
+    color: rgb(148, 163, 184);
+  }
+}
+
+.xtl-trans a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.xtl-trans .xtl-emoji,
+.xtl-trans img {
+  vertical-align: text-bottom;
+}
+
+.xtl-wrap.xtl-collapsed .xtl-trans,
+.xtl-wrap.xtl-collapsed .xtl-interleave-trans {
+  display: none;
+}
+
+/* ---- 逐句对照模式 ---- */
+
+/* 隐藏官方原文 tweetText（原文已并入双语块，纯文本形式） */
+.xtl-hidden {
+  display: none !important;
+}
+
+/* 逐句对照：每对原文+译文为一组，组间留间距 */
+.xtl-interleave .xtl-pair {
+  margin-bottom: 10px;
+}
+.xtl-interleave .xtl-pair:last-child {
+  margin-bottom: 0;
+}
+
+.xtl-interleave .xtl-orig {
+  color: rgb(15, 20, 25);
+  font-size: 15px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+@media (prefers-color-scheme: dark) {
+  .xtl-interleave .xtl-orig {
+    color: rgb(231, 233, 234);
+  }
+}
+
+.xtl-interleave .xtl-trans {
+  color: rgb(100, 116, 139);
+  font-size: 14px;
+  line-height: 18px;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+@media (prefers-color-scheme: dark) {
+  .xtl-interleave .xtl-trans {
+    color: rgb(148, 163, 184);
+  }
+}
+
+/* 折叠时只隐藏译文行 */
+.xtl-interleave.xtl-collapsed .xtl-pair .xtl-trans {
+  display: none;
+}

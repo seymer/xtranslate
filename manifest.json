@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "X 双语对照翻译",
+  "version": "1.0.0",
+  "description": "让 X (x.com) 的官方自动翻译以「原文 + 译文」双语对照形式显示。复用官方翻译结果，不调用第三方 API。",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://twitter.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "X 双语对照翻译"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://x.com/*", "https://twitter.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "toggle-bilingual": {
+      "suggested_key": {
+        "default": "Alt+B"
+      },
+      "description": "开启 / 关闭双语模式"
+    }
+  }
+}
