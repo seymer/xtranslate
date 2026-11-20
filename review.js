@@ -162,6 +162,10 @@ function makeCard(tweet) {
 }
 
 function render() {
+  if (!list || !summary || !viewToggle) {
+    console.error('[XTL] review page: 必需元素缺失，跳过渲染');
+    return;
+  }
   const items = view === 'due' ? XTLSavedTweets.dueToday(allTweets) : allTweets;
   list.replaceChildren();
   const dueCount = XTLSavedTweets.dueToday(allTweets).length;
@@ -223,7 +227,7 @@ async function updateSavedTweets(transform) {
   await operation.catch(() => {});
 }
 
-viewToggle.addEventListener('click', () => {
+if (viewToggle) viewToggle.addEventListener('click', () => {
   view = view === 'due' ? 'all' : 'due';
   render();
 });
