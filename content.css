@@ -35,6 +35,10 @@
 .xtl-save-btn.xtl-saved {
   color: #1d9bf0;
 }
+/* 文章页: 星作为 article 的首个子元素, margin-left: auto 实现右对齐 */
+.xtl-save-btn--top {
+  margin-left: auto;
+}
 
 .xtl-wrap {
   margin-top: 2px;

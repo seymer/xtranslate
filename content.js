@@ -943,18 +943,29 @@
   }
 
   function placeSaveButton(article, button) {
+    // 时间线: 旁边 Grok 控件(插入为兄弟节点)
     const grokControl = findGrokControl(article);
     if (grokControl && grokControl.parentElement) {
+      button.classList.remove('xtl-save-btn--top');
       if (button.parentElement !== grokControl.parentElement || button.nextElementSibling !== grokControl) {
         grokControl.parentElement.insertBefore(button, grokControl);
       }
       return;
     }
 
+    // 时间线: 操作栏(追加到组末尾)
     const group = Array.from(article.querySelectorAll('[role="group"]'))
       .find((node) => node.closest('article') === article);
-    const parent = group || article;
-    if (button.parentElement !== parent || parent.lastElementChild !== button) parent.appendChild(button);
+    if (group) {
+      button.classList.remove('xtl-save-btn--top');
+      if (button.parentElement !== group || group.lastElementChild !== button) group.appendChild(button);
+      return;
+    }
+
+    // 文章页(无 Grok 横幅、无 action bar): star 作为 article 的第一个子元素
+    // xtl-save-btn--top(margin-left: auto) 实现右对齐 — 长文推文不再把星塞到文末。
+    button.classList.add('xtl-save-btn--top');
+    if (article.firstElementChild !== button) article.insertBefore(button, article.firstElementChild);
   }
 
   function updateSaveButton(button, isSaved) {
