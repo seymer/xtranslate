@@ -1,13 +1,17 @@
 const list = document.getElementById('list');
 const summary = document.getElementById('summary');
 const viewToggle = document.getElementById('viewToggle');
+const exportSelectedBtn = document.getElementById('exportSelectedBtn');
+const exportAllBtn = document.getElementById('exportAllBtn');
 let messages = {};
 let allTweets = [];
 let view = 'due';
 let updateQueue = Promise.resolve();
+const selected = new Set(); // 选中用于「导出选中」的收藏 ID
 
 function t(key, value) {
-  return (messages[key] || key).replace('$1', String(value));
+  const s = messages[key] || key;
+  return value === undefined ? s : s.replace('$1', String(value));
 }
 
 async function loadLanguage() {
@@ -45,6 +49,20 @@ function createButton(label, className, onClick) {
 function appendActions(card, tweet) {
   const actions = document.createElement('div');
   actions.className = 'card-actions';
+
+  const selectCb = document.createElement('input');
+  selectCb.type = 'checkbox';
+  selectCb.className = 'export-select';
+  selectCb.checked = selected.has(tweet.id);
+  selectCb.title = t('exportSelect');
+  selectCb.setAttribute('aria-label', t('exportSelect'));
+  selectCb.addEventListener('change', () => {
+    if (selectCb.checked) selected.add(tweet.id);
+    else selected.delete(tweet.id);
+    updateExportButtons();
+  });
+  actions.appendChild(selectCb);
+
   if (view === 'due') {
     actions.appendChild(createButton(t('markReviewed'), 'action-btn primary', async () => {
       await updateSavedTweets((items) => XTLSavedTweets.markReviewed(items, tweet.id));
@@ -164,8 +182,35 @@ async function refresh() {
   const data = await chrome.storage.local.get({ savedTweets: [] });
   const items = Array.isArray(data.savedTweets) ? data.savedTweets : [];
   allTweets = items.slice().sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+  // 清理已被删除/移动的选中项
+  for (const id of selected) if (!allTweets.some((t) => t.id === id)) selected.delete(id);
+  updateExportButtons();
   render();
 }
+
+function updateExportButtons() {
+  exportSelectedBtn.disabled = selected.size === 0;
+}
+
+function exportTweets(items) {
+  if (!items || items.length === 0) return;
+  const text = XTLSavedTweets.formatExportText(items, t);
+  const now = new Date();
+  const stamp = `${now.toISOString().slice(0, 10).replace(/-/g, '')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+  const filename = `xtranslate-saved-${stamp}.txt`;
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+exportSelectedBtn.addEventListener('click', () => {
+  exportTweets(allTweets.filter((t) => selected.has(t.id)));
+});
+exportAllBtn.addEventListener('click', () => exportTweets(allTweets));
 
 async function updateSavedTweets(transform) {
   const operation = updateQueue.then(async () => {

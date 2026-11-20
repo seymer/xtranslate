@@ -100,3 +100,30 @@ test('corrupted stored data is treated as an empty list instead of crashing', ()
   ]);
   assert.equal(savedTweets.toggle(null, tweet).saved, true);
 });
+
+test('formatExportText includes title, saved date, original and translation text', () => {
+  const t = (key, value) => {
+    if (key === 'exportTitle') return 'Export file';
+    if (key === 'exportDate') return `Exported: ${value ?? ''}`;
+    if (key === 'unknownAuthor') return 'Unknown user';
+    if (key === 'savedOn') return `Saved ${value}`;
+    if (key === 'translationLabel') return 'Translation';
+    return key;
+  };
+  const text = savedTweets.formatExportText([
+    { id: '1', author: 'someone', text: '原文', translation: 'translation', savedAt: new Date(2026, 10, 20).getTime() },
+  ], t);
+  assert.match(text, /Export file/);
+  assert.match(text, /Exported: \d{4}-\d{2}-\d{2}/);
+  assert.match(text, /【someone】/);
+  assert.match(text, /Saved \d{4}-\d{2}-\d{2}/);
+  assert.match(text, /原文/);
+  assert.match(text, /Translation:/);
+  assert.match(text, /translation/);
+});
+
+test('formatExportText skips items without an id', () => {
+  const text = savedTweets.formatExportText([{ id: '', text: 'no id' }], () => 'T');
+  assert.ok(text.startsWith('T'));
+  assert.ok(!text.includes('no id'));
+});

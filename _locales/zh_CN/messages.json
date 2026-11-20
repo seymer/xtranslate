@@ -81,5 +81,10 @@
   "openTweet": { "message": "在 X 打开", "description": "打开推文原文链接" },
   "originalLabel": { "message": "原文", "description": "推文原文标签" },
   "translationLabel": { "message": "译文", "description": "推文译文标签" },
-  "unknownAuthor": { "message": "未知用户", "description": "用户名称缺失时显示" }
+  "unknownAuthor": { "message": "未知用户", "description": "用户名称缺失时显示" },
+  "exportAll": { "message": "导出全部", "description": "导出全部已收藏" },
+  "exportSelected": { "message": "导出选中", "description": "导出已选择的收藏" },
+  "exportSelect": { "message": "选中此收藏", "description": "复选框：标记当前收藏可用于导出" },
+  "exportTitle": { "message": "X 双语收藏导出", "description": "文本导出文件的标题" },
+  "exportDate": { "message": "导出日期：", "description": "文本导出文件的导出日期" }
 }

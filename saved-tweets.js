@@ -67,6 +67,31 @@
     return items.filter((item) => item && item.id !== id);
   }
 
+  // 文本导出（t 为 i18n 函数，review.js 传入）：导出标题、导出日期、逐条作者/保存日/原文/译文
+  function formatExportText(items, t) {
+    const dateStr = (ts) => {
+      const d = new Date(ts);
+      return d && !Number.isNaN(d.getTime()) ? d.toISOString().slice(0, 10) : '';
+    };
+    const lines = [t('exportTitle')];
+    lines.push(`${t('exportDate')}${dateStr(Date.now())}`);
+    lines.push('='.repeat(44));
+    (items || []).forEach((tweet) => {
+      if (!tweet || !tweet.id) return;
+      lines.push('');
+      lines.push(`【${tweet.author || t('unknownAuthor')}】`);
+      lines.push(t('savedOn', dateStr(tweet.savedAt)));
+      lines.push('');
+      lines.push(tweet.text || '');
+      if (tweet.translation) {
+        lines.push('');
+        lines.push(`${t('translationLabel')}:`);
+        lines.push(tweet.translation);
+      }
+    });
+    return lines.join('\n') + '\n';
+  }
+
   function toggle(items, tweet) {
     const list = Array.isArray(items) ? items : [];
     const isSaved = list.some((item) => item && item.id === tweet.id);
@@ -75,5 +100,5 @@
       : { items: upsert(items, tweet), saved: true };
   }
 
-  return { safeStorageGet, localDay, upsert, dueToday, markReviewed, remove, toggle };
+  return { safeStorageGet, localDay, upsert, dueToday, markReviewed, remove, toggle, formatExportText };
 });
