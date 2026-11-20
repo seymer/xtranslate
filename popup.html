@@ -131,6 +131,20 @@
     input[type="checkbox"]:checked::before {
       left: 16px;
     }
+    .review-btn {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #38444d;
+      border-radius: 8px;
+      background: #1c2733;
+      color: #e7e9ea;
+      font: inherit;
+      cursor: pointer;
+    }
+    .review-btn:hover {
+      border-color: #1d9bf0;
+      color: #1d9bf0;
+    }
     .hint {
       margin: 8px 0 0;
       padding: 0;
@@ -168,17 +182,20 @@
     <label for="transColor">
       <span data-i18n="transColorLabel">译文颜色</span>
       <select id="transColor">
-        <option value="default" data-i18n="colorDefault">默认灰</option>
+        <option value="default" data-i18n="colorDefault">默认蓝色</option>
         <option value="text" data-i18n="colorText">跟随正文</option>
-        <option value="blue" data-i18n="colorBlue">蓝色</option>
         <option value="green" data-i18n="colorGreen">绿色</option>
       </select>
     </label>
+  </div>
+  <div class="row">
+    <button id="reviewButton" class="review-btn" data-i18n="reviewButton">每日复习（0）</button>
   </div>
   <p class="hint">
     <span data-i18n="hintToggle">快捷键：</span><kbd>Alt</kbd> + <kbd>B</kbd><br />
     <span data-i18n="hintCollapse">点「翻译自 xxx」可折叠译文。</span>
   </p>
+  <script src="saved-tweets.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

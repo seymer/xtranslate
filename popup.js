@@ -3,8 +3,25 @@ const toggle = document.getElementById('toggle');
 const modeBtns = document.querySelectorAll('.mode-btn');
 const transColor = document.getElementById('transColor');
 const langBtns = document.querySelectorAll('.lang-btn');
+const reviewButton = document.getElementById('reviewButton');
 
 let manualLang = null;
+let reviewMessages = {};
+
+function updateReviewButton(items) {
+  const saved = Array.isArray(items) ? items : [];
+  const dueCount = XTLSavedTweets.dueToday(saved).length;
+  const template = reviewMessages.reviewButton || '每日复习（$1）';
+  reviewButton.textContent = template.replace('$1', String(dueCount));
+}
+
+chrome.storage.local.get({ savedTweets: [] }, (data) => updateReviewButton(data.savedTweets));
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.savedTweets) updateReviewButton(changes.savedTweets.newValue);
+});
+reviewButton.addEventListener('click', () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL('review.html') });
+});
 
 // 注入本地化文本；手动选择语言时用 _locales 对应文件覆盖
 function applyI18n(key, msg) {
@@ -19,7 +36,9 @@ async function setManualLang(lang) {
   try {
     const res = await fetch(chrome.runtime.getURL('_locales/' + lang + '/messages.json'));
     const json = await res.json();
+    reviewMessages = Object.fromEntries(Object.entries(json).map(([key, value]) => [key, value.message]));
     for (const [key, v] of Object.entries(json)) applyI18n(key, v.message);
+    chrome.storage.local.get({ savedTweets: [] }, (data) => updateReviewButton(data.savedTweets));
   } catch (_) { /* 加载失败则保持浏览器语言 */ }
 }
 
@@ -30,7 +49,8 @@ chrome.storage.local.get(['enabled', 'mode', 'transColor', 'lang'], (d) => {
   modeBtns.forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.mode === currentMode);
   });
-  transColor.value = d.transColor || 'default';
+  // 旧版“blue”选项已并入默认蓝色，旧数据映射为 default
+  transColor.value = (d.transColor === 'text' || d.transColor === 'green') ? d.transColor : 'default';
 
   manualLang = d.lang === 'zh_CN' || d.lang === 'en' ? d.lang : 'zh_CN';
   langBtns.forEach((btn) => {

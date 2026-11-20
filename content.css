@@ -2,8 +2,38 @@
 
 /* 译文颜色变量（可由设置覆盖） */
 :root {
-  --xtl-trans-color: rgb(100, 116, 139);      /* slate-500: 4.64:1 on white */
-  --xtl-trans-color-dark: rgb(148, 163, 184); /* slate-300: 5.95:1 on #15202b */
+  --xtl-trans-color: rgb(13, 97, 204);        /* 默认蓝色 */
+  --xtl-trans-color-dark: rgb(108, 178, 238); /* dark-blue */
+}
+
+/* 收藏推文按钮：与 Grok 控件并排显示在推文右上角 */
+.xtl-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  padding: 0;
+  margin-right: 4px;
+  border: 0;
+  border-radius: 9999px;
+  color: #71767b;
+  background: transparent;
+  font: inherit;
+  font-size: 20px;
+  line-height: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1;
+}
+.xtl-save-btn:hover {
+  color: #1d9bf0;
+  background: rgba(29, 155, 240, 0.1);
+}
+.xtl-save-btn.xtl-saved {
+  color: #1d9bf0;
 }
 
 .xtl-wrap {

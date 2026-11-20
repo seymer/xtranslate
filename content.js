@@ -27,7 +27,9 @@
   const SHOW_MORE_LABELS = ['显示更多', 'Show more'];
   const POLL_MS = 80;
   const POLL_MAX = 3000;
-  const PROCESS_PAIR_TIMEOUT = 5000; // 单条 processPair 最大耗时，防止阻塞整个 scan
+  // 单条 processPair 最多要经历 expandShowMore + waitForChange 各两次（每次最长 POLL_MAX），
+  // 最长约 12s；超时值必须大于它，否则正常处理会被硬超时截断，留下未完成的中间状态。
+  const PROCESS_PAIR_TIMEOUT = 15000;
   const PENDING_TTL = 30000;
   const PROCESSED_TTL = 60000;
   const FAILED_BTN_TTL = 30000; // Bug5: failedBtns 30秒后允许重试
@@ -45,6 +47,7 @@
 
   let enabled = true;
   let mode = 'interleave';
+  let initialized = false;
 
   const records = new WeakMap();      // tweetText → { tweetId, transHTML, origHTML, note, origText, head, transHead }
   const recordNodes = new Set();      // 所有有 record 的节点（可遍历，配合 WeakMap）
@@ -102,7 +105,10 @@
     try {
       const article = tweetText.closest('article');
       if (!article) return null;
-      const link = article.querySelector('a[href*="/status/"]');
+      // 引用推文里也有 /status/ 链接；优先取带 <time> 的永久链接，避免拿错 ID
+      const links = Array.from(article.querySelectorAll('a[href*="/status/"]'))
+        .filter((link) => link.closest('article') === article);
+      const link = links.find((candidate) => candidate.querySelector('time')) || links[0];
       if (!link) return null;
       const m = link.href.match(/\/status\/(\d+)/);
       return m ? m[1] : null;
@@ -446,16 +452,20 @@
   /** 按存储中的手动语言更新折叠提示（null=跟随浏览器） */
   function applyFoldTitle(lang) {
     if (lang && lang !== 'auto') FOLD_HINT = FOLD_TITLES[lang] || FOLD_HINT;
-    else FOLD_HINT = chrome.i18n.getMessage('foldTitle') || FOLD_TITLES.zh_CN;
+    else {
+      try { FOLD_HINT = chrome.i18n.getMessage('foldTitle') || FOLD_TITLES.zh_CN; }
+      catch (_) { FOLD_HINT = FOLD_TITLES.zh_CN; }
+    }
     document.querySelectorAll('.xtl-note').forEach((n) => { n.title = FOLD_HINT; });
   }
 
   /* ==================== 译文颜色设置 ==================== */
   // 每种预设的亮色/暗色变体（均满足 WCAG AA 对比度）
   const TRAN_COLORS = {
-    default: { light: null, dark: null },                      // 保持 CSS 默认灰
+    // 默认改为蓝色（旧版的透明/灰色仍兼容，不再单独提供"蓝色"选项）
+    default: { light: 'rgb(13, 97, 204)', dark: 'rgb(108, 178, 238)' },
     text: { light: 'rgb(15, 20, 25)', dark: 'rgb(231, 233, 234)' },   // 跟随正文
-    blue: { light: 'rgb(13, 97, 204)', dark: 'rgb(108, 178, 238)' },  // 蓝
+    blue: { light: 'rgb(13, 97, 204)', dark: 'rgb(108, 178, 238)' },  // 保留兼容
     green: { light: 'rgb(20, 112, 76)', dark: 'rgb(94, 192, 138)' },  // 绿
   };
   function applyTransColor(name) {
@@ -561,8 +571,11 @@
 
   /* ==================== 核心处理 ==================== */
 
+  const activePendingKeys = new WeakMap(); // tweetText → 当前使用的 pendingKey（供硬超时清理）
+
   function cleanupPending(tt, pendingKey, success) {
     pending.delete(tt);
+    activePendingKeys.delete(tt);
     if (success && pendingKey) pendingTexts.delete(pendingKey);
   }
 
@@ -580,14 +593,21 @@
 
   /** 包装 processPair 并设置超时保护，防止单条推文阻塞整个 scan */
   function processPairWithTimeout(btn, tweetText) {
-    return Promise.race([
-      processPair(btn, tweetText),
-      new Promise((resolve) => setTimeout(() => {
+    let timer;
+    const timeout = new Promise((resolve) => {
+      timer = setTimeout(() => {
         dbg('processPair: HARD TIMEOUT (', PROCESS_PAIR_TIMEOUT, 'ms)');
+        // 超时后必须同时清理冷却 key，否则该推文 30 秒内无法重试
         pending.delete(tweetText);
+        const key = activePendingKeys.get(tweetText);
+        if (key) pendingTexts.delete(key);
+        activePendingKeys.delete(tweetText);
         resolve();
-      }, PROCESS_PAIR_TIMEOUT)),
-    ]);
+      }, PROCESS_PAIR_TIMEOUT);
+    });
+    // processPair 正常结束时清掉定时器，避免旧的超时误伤同一节点上的新一轮处理
+    const work = processPair(btn, tweetText).finally(() => clearTimeout(timer));
+    return Promise.race([work, timeout]);
   }
 
   async function processPair(btn, tweetText) {
@@ -600,6 +620,7 @@
     if (isPendingText(pendingKey)) { dbg('processPair: SKIP (pendingTexts)'); return; }
     pendingTexts.set(pendingKey, Date.now());
     pending.add(tweetText);
+    activePendingKeys.set(tweetText, pendingKey);
     dbg('processPair: START', { tweetId, type: isShowTranslationBtn(btn) ? '显示翻译' : '显示原文', text: tweetText.textContent.slice(0, 40) });
 
     // ---------- UserDescription 专用路径 ----------
@@ -839,15 +860,240 @@
     }
   }
 
+  /* ==================== 收藏推文 ==================== */
+
+  const SAVE_LABELS = {
+    zh_CN: { save: '保存推文', unsave: '取消保存推文' },
+    en: { save: 'Save tweet', unsave: 'Remove saved tweet' },
+  };
+  let contentLang = 'zh_CN';
+  let saveSyncScheduled = false;
+  let saveWriteQueue = Promise.resolve();
+  let extensionContextAlive = true;
+  let extensionObserver = null;
+  let extensionTimers = [];
+
+  /** 扩展被重载后，旧 content script 里的 chrome.* 调用会一直抛错。彻底停机。 */
+  function shutdownExtensionContext() {
+    if (!extensionContextAlive) return;
+    extensionContextAlive = false;
+    try { if (extensionObserver) extensionObserver.disconnect(); } catch (_) {}
+    extensionTimers.forEach((id) => { try { clearInterval(id); } catch (_) {} });
+    extensionTimers = [];
+    document.querySelectorAll('.xtl-save-btn').forEach((btn) => btn.remove());
+  }
+
+  function handleStorageError(error) {
+    if (/Extension context invalidated/i.test(error && error.message || String(error))) {
+      console.info('[XTL] extension context invalidated - stopping old content script. Refresh the page.');
+      shutdownExtensionContext();
+      return;
+    }
+    // 收藏失败要有可见线索，否则用户只会看到星标没反应
+    console.warn('[XTL] storage error:', error);
+  }
+
+  function getSavedTweets(callback) {
+    if (!extensionContextAlive) return false;
+    try {
+      return XTLSavedTweets.safeStorageGet(
+        chrome.storage.local,
+        { savedTweets: [] },
+        (data) => {
+          if (extensionContextAlive) callback(data || {});
+        },
+        handleStorageError,
+      );
+    } catch (error) {
+      handleStorageError(error);
+      return false;
+    }
+  }
+
+  function tweetIdForArticle(article) {
+    const links = Array.from(article.querySelectorAll('a[href*="/status/"]'))
+      .filter((candidate) => candidate.closest('article') === article);
+    const permalink = links.find((link) => link.querySelector('time')) || links[0];
+    const match = permalink && permalink.href.match(/\/status\/(\d+)/);
+    return match ? match[1] : null;
+  }
+
+  function tweetTextForArticle(article) {
+    return Array.from(article.querySelectorAll('div[data-testid="tweetText"]'))
+      .find((node) => node.closest('article') === article) || null;
+  }
+
+  function findGrokControl(article) {
+    const candidates = article.querySelectorAll('button, [role="button"], [data-testid]');
+    for (const candidate of candidates) {
+      if (candidate.closest('article') !== article) continue;
+      const label = [
+        candidate.getAttribute('aria-label'),
+        candidate.getAttribute('data-testid'),
+        candidate.getAttribute('title'),
+        candidate.getAttribute('href'),
+        candidate.innerText,
+      ].join(' ');
+      if (!/grok/i.test(label)) continue;
+      return candidate.matches('button, [role="button"]')
+        ? candidate
+        : candidate.closest('button, [role="button"]') || candidate;
+    }
+    return null;
+  }
+
+  function placeSaveButton(article, button) {
+    const grokControl = findGrokControl(article);
+    if (grokControl && grokControl.parentElement) {
+      if (button.parentElement !== grokControl.parentElement || button.nextElementSibling !== grokControl) {
+        grokControl.parentElement.insertBefore(button, grokControl);
+      }
+      return;
+    }
+
+    const group = Array.from(article.querySelectorAll('[role="group"]'))
+      .find((node) => node.closest('article') === article);
+    const parent = group || article;
+    if (button.parentElement !== parent || parent.lastElementChild !== button) parent.appendChild(button);
+  }
+
+  function updateSaveButton(button, isSaved) {
+    const labels = SAVE_LABELS[contentLang] || SAVE_LABELS.zh_CN;
+    button.textContent = isSaved ? '★' : '☆';
+    button.setAttribute('aria-label', isSaved ? labels.unsave : labels.save);
+    button.title = isSaved ? labels.unsave : labels.save;
+    button.classList.toggle('xtl-saved', isSaved);
+    button.dataset.saved = String(isSaved);
+  }
+
+  function scheduleSaveButtonSync() {
+    if (!extensionContextAlive || saveSyncScheduled) return;
+    saveSyncScheduled = true;
+    setTimeout(() => {
+      saveSyncScheduled = false;
+      syncSaveButtons();
+    }, 250);
+  }
+
+  function syncSaveButtons() {
+    if (!extensionContextAlive) return;
+    try {
+      const buttons = [];
+      document.querySelectorAll('article').forEach((article) => {
+        const tweetId = tweetIdForArticle(article);
+        if (!tweetId) return;
+        let button = Array.from(article.querySelectorAll('.xtl-save-btn'))
+          .find((candidate) => candidate.closest('article') === article);
+        if (!button) {
+          button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'xtl-save-btn';
+        }
+        // 点击事件统一在 document 上委托处理，避免 React 重渲染替换按钮后监听器失效
+        button.dataset.tweetId = tweetId;
+        placeSaveButton(article, button);
+        buttons.push(button);
+      });
+
+      getSavedTweets((data) => {
+        if (!extensionContextAlive) return;
+        const items = Array.isArray(data.savedTweets) ? data.savedTweets : [];
+        const savedIds = new Set(items.map((item) => item && item.id));
+        buttons.forEach((button) => updateSaveButton(button, savedIds.has(button.dataset.tweetId)));
+      });
+    } catch (error) {
+      handleStorageError(error);
+    }
+  }
+
+  function saveArticleTweet(article, button, expectedSaved) {
+    if (!extensionContextAlive) return;
+    try {
+      const tweetId = button.dataset.tweetId;
+      if (!tweetId) return;
+      const tweetText = tweetTextForArticle(article);
+      const record = tweetText ? records.get(tweetText) : null;
+      const origHTML = record ? record.origHTML : (tweetText ? tweetText.innerHTML : '');
+      const transHTML = record ? record.transHTML : '';
+      const authorNode = Array.from(article.querySelectorAll('[data-testid="User-Name"]'))
+        .find((node) => node.closest('article') === article);
+      const tweet = {
+        id: tweetId,
+        url: `https://x.com/i/status/${tweetId}`,
+        author: norm(authorNode && authorNode.innerText) || '',
+        text: htmlToText(origHTML) || (tweetText ? norm(tweetText.textContent) : ''),
+        translation: transHTML ? htmlToText(transHTML) : '',
+        savedAt: Date.now(),
+      };
+
+      saveWriteQueue = saveWriteQueue.then(async () => {
+        if (!extensionContextAlive) return;
+        try {
+          const data = await chrome.storage.local.get({ savedTweets: [] });
+          const result = XTLSavedTweets.toggle(data.savedTweets || [], tweet);
+          await chrome.storage.local.set({ savedTweets: result.items });
+          if (extensionContextAlive) updateSaveButton(button, result.saved);
+        } catch (error) {
+          if (expectedSaved !== undefined) updateSaveButton(button, !expectedSaved);
+          handleStorageError(error);
+        }
+      }).catch(handleStorageError);
+    } catch (error) {
+      if (expectedSaved !== undefined) updateSaveButton(button, !expectedSaved);
+      handleStorageError(error);
+    }
+  }
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.savedTweets) scheduleSaveButtonSync();
+  });
+
   /* ==================== 事件监听 ==================== */
 
+  // 单个委托监听器：无论按钮何时被 React 重建都能响应，且点击时重新读取所属 article
   document.addEventListener('click', (e) => {
-    const note = e.target && e.target.closest && e.target.closest('.xtl-note');
+    const target = e.target;
+    if (!target || !target.closest) return;
+
+    const saveBtn = target.closest('.xtl-save-btn');
+    if (saveBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      const article = saveBtn.closest('article');
+      if (!article) return;
+      const tweetId = saveBtn.dataset.tweetId || tweetIdForArticle(article) || '';
+      if (!tweetId) return; // 拿不到推文 ID 时不做任何视觉变更，避免假收藏状态
+      saveBtn.dataset.tweetId = tweetId;
+      // 先给出即时反馈；写入失败时再回滚
+      const expected = saveBtn.dataset.saved !== 'true';
+      updateSaveButton(saveBtn, expected);
+      saveArticleTweet(article, saveBtn, expected);
+      return;
+    }
+
+    const note = target.closest('.xtl-note');
     if (!note) return;
     const wrap = note.parentElement;
+    if (!wrap) return;
     wrap.classList.toggle('xtl-collapsed');
     note.setAttribute('aria-expanded', !wrap.classList.contains('xtl-collapsed'));
   }, true);
+
+  // 处理来自 popup / background 的即时控制消息（storage.onChanged 仍作为兜底）
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (!msg || typeof msg.type !== 'string') return;
+    if (msg.type === 'XTL_TOGGLE' && !extensionContextAlive) return;
+    if (msg.type === 'XTL_TOGGLE') {
+      enabled = !!msg.enabled;
+      if (enabled) { rebuildAll(); scheduleScan(); } else { restoreToTranslationOnly(); }
+    } else if (msg.type === 'XTL_MODE') {
+      const newMode = msg.mode === 'block' ? 'block' : 'interleave';
+      if (newMode !== mode) { mode = newMode; if (enabled) rebuildAll(); }
+    } else if (msg.type === 'XTL_TRANS_COLOR') {
+      applyTransColor(msg.transColor);
+    }
+  });
 
   /* ==================== 初始化 ==================== */
 
@@ -875,10 +1121,12 @@
     }, 120);
   }
 
-  new MutationObserver(scheduleScan).observe(document.body, { childList: true, subtree: true });
+  extensionObserver = new MutationObserver(() => { scheduleScan(); scheduleSaveButtonSync(); });
+  extensionObserver.observe(document.body, { childList: true, subtree: true });
   dbg('init: MutationObserver attached');
   scheduleScan();
-  setInterval(scheduleScan, 2000);
+  scheduleSaveButtonSync();
+  extensionTimers.push(setInterval(() => { scheduleScan(); scheduleSaveButtonSync(); }, 2000));
 
   // 定期清理
   function cleanupExpiredEntries() {
@@ -888,17 +1136,27 @@
     // 清理断开的 recordNodes
     for (const tt of recordNodes) { if (!tt.isConnected) { recordNodes.delete(tt); records.delete(tt); } }
   }
-  setInterval(cleanupExpiredEntries, 15000);
+  extensionTimers.push(setInterval(cleanupExpiredEntries, 15000));
 
-  chrome.storage.local.get(['enabled', 'mode', 'transColor', 'lang'], (d) => {
-    enabled = d.enabled !== false;
-    mode = d.mode === 'block' ? 'block' : 'interleave';
-    applyTransColor(d.transColor);
-    applyFoldTitle(d.lang);
-    initialized = true;
-    dbg('init: storage loaded', { enabled, mode });
-    scheduleScan();
-  });
+  console.info('[XTL] content script ready - build 2026-11-20-audit');
+
+  (function loadInitialSettings() {
+    if (!extensionContextAlive) return;
+    let storage;
+    try { storage = chrome.storage.local; } catch (error) { handleStorageError(error); return; }
+    XTLSavedTweets.safeStorageGet(storage, ['enabled', 'mode', 'transColor', 'lang'], (d) => {
+      if (!extensionContextAlive) return;
+      enabled = d.enabled !== false;
+      mode = d.mode === 'block' ? 'block' : 'interleave';
+      applyTransColor(d.transColor);
+      applyFoldTitle(d.lang);
+      contentLang = d.lang === 'en' ? 'en' : 'zh_CN';
+      initialized = true;
+      dbg('init: storage loaded', { enabled, mode });
+      scheduleScan();
+      scheduleSaveButtonSync();
+    }, handleStorageError);
+  })();
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
@@ -923,6 +1181,8 @@
     }
     if (changes.lang) {
       applyFoldTitle(changes.lang.newValue);
+      contentLang = changes.lang.newValue === 'en' ? 'en' : 'zh_CN';
+      scheduleSaveButtonSync();
     }
   });
 })();

@@ -11,6 +11,8 @@ chrome.commands.onCommand.addListener(async (command) => {
     await chrome.storage.local.set({ enabled: newEnabled });
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab || !tab.url || !/^https:\/\/(x|twitter)\.com\//.test(tab.url)) return;
-    chrome.tabs.sendMessage(tab.id, { type: 'XTL_TOGGLE', enabled: newEnabled });
+    chrome.tabs.sendMessage(tab.id, { type: 'XTL_TOGGLE', enabled: newEnabled }, () => {
+      if (chrome.runtime.lastError) { /* 页面未注入 content script，storage.onChanged 会兜底 */ }
+    });
   } catch (_) { /* 忽略 */ }
 });

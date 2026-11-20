@@ -48,19 +48,38 @@
     "description": "译文颜色设置标签"
   },
   "colorDefault": {
-    "message": "默认灰",
-    "description": "颜色预设：默认灰"
+    "message": "默认蓝色",
+    "description": "颜色预设：默认蓝色"
   },
   "colorText": {
     "message": "跟随正文",
     "description": "颜色预设：跟随正文"
   },
-  "colorBlue": {
-    "message": "蓝色",
-    "description": "颜色预设：蓝色"
-  },
   "colorGreen": {
     "message": "绿色",
     "description": "颜色预设：绿色"
-  }
+  },
+  "reviewButton": {
+    "message": "每日复习（$1）",
+    "description": "打开每日推文复习页和待复习数量"
+  },
+  "saveTweet": { "message": "保存推文", "description": "保存当前推文按钮" },
+  "unsaveTweet": { "message": "取消保存推文", "description": "已收藏时点击可取消收藏" },
+  "tweetSaved": { "message": "已保存", "description": "推文已保存状态" },
+  "reviewTitle": { "message": "推文每日复习", "description": "复习页标题" },
+  "reviewToday": { "message": "今日待复习", "description": "显示今日队列" },
+  "reviewAll": { "message": "全部收藏", "description": "显示所有收藏" },
+  "reviewDone": { "message": "今日完成", "description": "今日复习已完成" },
+  "reviewEmpty": { "message": "今天没有待复习推文。去 X 上保存一些推文吧。", "description": "今日队列为空" },
+  "reviewEmptyAll": { "message": "还没有收藏推文。", "description": "收藏列表为空" },
+  "showTranslation": { "message": "显示译文", "description": "显示翻译内容" },
+  "hideTranslation": { "message": "隐藏译文", "description": "隐藏翻译内容" },
+  "markReviewed": { "message": "完成今日复习", "description": "标记今日已复习" },
+  "removeSaved": { "message": "删除收藏", "description": "删除收藏推文" },
+  "savedOn": { "message": "收藏于 $1", "description": "收藏时间" },
+  "reviewCount": { "message": "已复习 $1 次", "description": "复习次数" },
+  "openTweet": { "message": "在 X 打开", "description": "打开推文原文链接" },
+  "originalLabel": { "message": "原文", "description": "推文原文标签" },
+  "translationLabel": { "message": "译文", "description": "推文译文标签" },
+  "unknownAuthor": { "message": "未知用户", "description": "用户名称缺失时显示" }
 }

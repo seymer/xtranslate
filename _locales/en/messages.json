@@ -48,19 +48,38 @@
     "description": "Translation color setting label"
   },
   "colorDefault": {
-    "message": "Default gray",
-    "description": "Color preset: default gray"
+    "message": "Default blue",
+    "description": "Color preset: default blue"
   },
   "colorText": {
     "message": "Match text",
     "description": "Color preset: match body text"
   },
-  "colorBlue": {
-    "message": "Blue",
-    "description": "Color preset: blue"
-  },
   "colorGreen": {
     "message": "Green",
     "description": "Color preset: green"
-  }
+  },
+  "reviewButton": {
+    "message": "Daily review ($1)",
+    "description": "Open the daily tweet review page and show due count"
+  },
+  "saveTweet": { "message": "Save tweet", "description": "Button to save the current tweet" },
+  "unsaveTweet": { "message": "Remove saved tweet", "description": "Click to unsave a saved tweet" },
+  "tweetSaved": { "message": "Saved", "description": "Tweet has been saved" },
+  "reviewTitle": { "message": "Daily Tweet Review", "description": "Review page title" },
+  "reviewToday": { "message": "Due today", "description": "Show today's review queue" },
+  "reviewAll": { "message": "All saved", "description": "Show all saved tweets" },
+  "reviewDone": { "message": "Today's review complete", "description": "All due tweets reviewed today" },
+  "reviewEmpty": { "message": "Nothing due today. Save some tweets on X to start a review list.", "description": "Today's queue is empty" },
+  "reviewEmptyAll": { "message": "No saved tweets yet.", "description": "Saved tweet list is empty" },
+  "showTranslation": { "message": "Show translation", "description": "Reveal translated text" },
+  "hideTranslation": { "message": "Hide translation", "description": "Hide translated text" },
+  "markReviewed": { "message": "Mark reviewed today", "description": "Mark as reviewed for today" },
+  "removeSaved": { "message": "Remove", "description": "Remove a saved tweet" },
+  "savedOn": { "message": "Saved $1", "description": "Saved date" },
+  "reviewCount": { "message": "Reviewed $1 times", "description": "Review count" },
+  "openTweet": { "message": "Open on X", "description": "Open original tweet" },
+  "originalLabel": { "message": "Original", "description": "Original tweet label" },
+  "translationLabel": { "message": "Translation", "description": "Translation label" },
+  "unknownAuthor": { "message": "Unknown user", "description": "Fallback for missing user name" }
 }
