@@ -83,6 +83,8 @@
   "translationLabel": { "message": "Translation", "description": "Translation label" },
   "unknownAuthor": { "message": "Unknown user", "description": "Fallback for missing user name" },
   "exportAll": { "message": "Export all", "description": "Export all saved tweets" },
+  "clearAll": { "message": "Clear saved", "description": "Clear all saved tweets" },
+  "clearConfirm": { "message": "Clear all saved tweets? They cannot be recovered.", "description": "Confirm text when clearing saved tweets" },
   "exportSelected": { "message": "Export selected", "description": "Export the selected saved tweets" },
   "exportSelect": { "message": "Select this saved tweet", "description": "Checkbox: mark this saved tweet for export" },
   "exportTitle": { "message": "X Bilingual Saved Tweets Export", "description": "Title line of the text export file" },

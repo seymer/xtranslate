@@ -3,6 +3,7 @@ const summary = document.getElementById('summary');
 const viewToggle = document.getElementById('viewToggle');
 const exportSelectedBtn = document.getElementById('exportSelectedBtn');
 const exportAllBtn = document.getElementById('exportAllBtn');
+const clearAllBtn = document.getElementById('clearAllBtn');
 let messages = {};
 let allTweets = [];
 let view = 'due';
@@ -215,6 +216,17 @@ exportSelectedBtn.addEventListener('click', () => {
   exportTweets(allTweets.filter((t) => selected.has(t.id)));
 });
 exportAllBtn.addEventListener('click', () => exportTweets(allTweets));
+
+async function clearAll() {
+  if (!window.confirm(t('clearConfirm'))) return;
+  selected.clear();
+  updateExportButtons();
+  try {
+    await chrome.storage.local.set({ savedTweets: [] });
+    await refresh();
+  } catch (_) { /* storage 异常时什么都不做 */ }
+}
+if (clearAllBtn) clearAllBtn.addEventListener('click', clearAll);
 
 async function updateSavedTweets(transform) {
   const operation = updateQueue.then(async () => {

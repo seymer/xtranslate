@@ -59,7 +59,33 @@
     .card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .action-btn.primary { border-color: #1d9bf0; color: #1d9bf0; }
     .export-btn { padding: 6px 12px; font-size: 13px; }
-    .export-select { margin: 0; }
+    /* 选中的收藏勾选框：小圆邊 + 显示对号 */
+    .export-select {
+      margin: 0;
+      width: 22px;
+      height: 22px;
+      flex: none;
+      border: 2px solid #38444d;
+      border-radius: 5px;
+      background: #192734;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .export-select::after {
+      content: "✓";
+      font-size: 12px;
+      line-height: 1;
+      color: #1d9bf0;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .export-select:checked { border-color: #1d9bf0; background: #16222f; }
+    .export-select:checked::after { opacity: 1; }
+    .export-select:hover { border-color: #1d9bf0; }
+    .export-select:focus-visible { outline: 2px solid #1d9bf0; outline-offset: 1px; }
     .empty { padding: 36px 18px; text-align: center; color: #8b98a5; border: 1px dashed #38444d; border-radius: 14px; }
     @media (max-width: 520px) {
       main { margin: 20px auto; }
@@ -75,6 +101,7 @@
       <div class="export-bar">
         <button id="exportSelectedBtn" class="action-btn export-btn" data-i18n="exportSelected" disabled>导出选中</button>
         <button id="exportAllBtn" class="action-btn export-btn" data-i18n="exportAll">导出全部</button>
+        <button id="clearAllBtn" class="action-btn export-btn" data-i18n="clearAll">清空收藏</button>
         <button id="viewToggle" type="button" data-i18n="reviewAll">全部收藏</button>
       </div>
     </header>
