@@ -31,7 +31,6 @@
   // 最长约 12s；超时值必须大于它，否则正常处理会被硬超时截断，留下未完成的中间状态。
   const PROCESS_PAIR_TIMEOUT = 15000;
   const PENDING_TTL = 30000;
-  const PROCESSED_TTL = 60000;
   const FAILED_BTN_TTL = 30000; // Bug5: failedBtns 30秒后允许重试
 
   const THIRD_PARTY_SELECTORS = [
@@ -47,14 +46,12 @@
 
   let enabled = true;
   let mode = 'interleave';
-  let initialized = false;
 
   const records = new WeakMap();      // tweetText → { tweetId, transHTML, origHTML, note, origText, head, transHead }
   const recordNodes = new Set();      // 所有有 record 的节点（可遍历，配合 WeakMap）
   const pending = new WeakSet();      // 正在处理中的 tweetText
   let failedBtns = new WeakMap();     // Bug5: btn → timestamp，超时后允许重试
   const pendingTexts = new Map();     // textKey → timestamp（30秒冷却）
-  const processedIds = new Map();     // tweetId → timestamp（60秒去重）
   let retryRemaining = 3;
 
   /* ==================== 基础工具 ==================== */
@@ -70,14 +67,6 @@
     const ts = pendingTexts.get(key);
     if (ts === undefined) return false;
     if (Date.now() - ts > PENDING_TTL) { pendingTexts.delete(key); return false; }
-    return true;
-  }
-
-  function isProcessedId(id) {
-    if (!id) return false;
-    const ts = processedIds.get(id);
-    if (ts === undefined) return false;
-    if (Date.now() - ts > PROCESSED_TTL) { processedIds.delete(id); return false; }
     return true;
   }
 
@@ -123,7 +112,7 @@
   /* ==================== 句子/段落拆分 ==================== */
 
   const PURE_URL_RE = /^(https?:\/\/|www\.)\S+$|^[\w-]+(\.[\w-]+)+(\/\S*)?$/i;
-  function isPureUrl(s) { return PURE_URL_RE.test(s.trim()); }
+  function isPureUrl(s) { return PURE_URL_RE.test((s || '').trim()); }
 
   const ABBREVS = new Set([
     'vs','dr','mr','mrs','ms','prof','inc','ltd','corp','co','dept','est','vol','fig',
@@ -594,19 +583,17 @@
   /** 包装 processPair 并设置超时保护，防止单条推文阻塞整个 scan */
   function processPairWithTimeout(btn, tweetText) {
     let timer;
+    const work = processPair(btn, tweetText).finally(() => clearTimeout(timer));
     const timeout = new Promise((resolve) => {
       timer = setTimeout(() => {
         dbg('processPair: HARD TIMEOUT (', PROCESS_PAIR_TIMEOUT, 'ms)');
-        // 超时后必须同时清理冷却 key，否则该推文 30 秒内无法重试
-        pending.delete(tweetText);
+        // 释放重试冷却让下次 scan 可以重试；不清 pending —— 等原 processPair 结束后
+        // 再清理（cleanupPending），避免原操作仍在跑时 double-run。
         const key = activePendingKeys.get(tweetText);
         if (key) pendingTexts.delete(key);
-        activePendingKeys.delete(tweetText);
         resolve();
       }, PROCESS_PAIR_TIMEOUT);
     });
-    // processPair 正常结束时清掉定时器，避免旧的超时误伤同一节点上的新一轮处理
-    const work = processPair(btn, tweetText).finally(() => clearTimeout(timer));
     return Promise.race([work, timeout]);
   }
 
@@ -638,7 +625,6 @@
         if (!enabled) { cleanupPending(tweetText, pendingKey); return; }
         const rec = { tweetId, transHTML, origHTML, note: extractNote(btn), origText: htmlToText(origHTML), head: htmlToText(origHTML).slice(0, 32), transHead: htmlToText(transHTML).slice(0, 32) };
         setRecord(node, rec);
-        if (tweetId) processedIds.set(tweetId, Date.now());
         buildAndInsert(node, rec);
         cleanupPending(tweetText, pendingKey, true);
         return;
@@ -654,7 +640,6 @@
       if (!enabled) { try { node.innerHTML = transHTML; } catch (_) {} cleanupPending(tweetText, pendingKey); return; }
       const rec = { tweetId, transHTML, origHTML, note, origText: htmlToText(origHTML), head: htmlToText(origHTML).slice(0, 32), transHead: htmlToText(transHTML).slice(0, 32) };
       setRecord(node, rec);
-      if (tweetId) processedIds.set(tweetId, Date.now());
       buildAndInsert(node, rec);
       cleanupPending(tweetText, pendingKey, true);
       return;
@@ -682,7 +667,6 @@
 
       const rec = { tweetId, transHTML, origHTML, note: extractNote(btn), origText: htmlToText(origHTML), head: htmlToText(origHTML).slice(0, 32), transHead: htmlToText(transHTML).slice(0, 32) };
       setRecord(tweetText, rec);
-      if (tweetId) processedIds.set(tweetId, Date.now());
       buildAndInsert(tweetText, rec);
       cleanupPending(tweetText, pendingKey, true);
       return;
@@ -701,7 +685,6 @@
 
     const rec = { tweetId, transHTML, origHTML, note, origText: htmlToText(origHTML), head: htmlToText(origHTML).slice(0, 32), transHead: htmlToText(transHTML).slice(0, 32) };
     setRecord(tweetText, rec);
-    if (tweetId) processedIds.set(tweetId, Date.now());
     buildAndInsert(tweetText, rec);
     cleanupPending(tweetText, pendingKey, true);
   }
@@ -782,9 +765,7 @@
       if (isValid(tt)) continue;
       if (hasWrapNear(tt)) continue;
 
-      // Bug1: tweetId 去重 — 但如果当前 tweetText 没有 wrap，说明 DOM 被重建了，允许重新处理
       const tweetId = getTweetId(tt);
-      if (tweetId && isProcessedId(tweetId) && hasWrapNear(tt)) { dbg('scan: SKIP (processed tweetId)', tweetId); continue; }
 
       // Bug2: 文本冷却用联合 key（防重入）
       const k = norm(tt.textContent).slice(0, 64);
@@ -807,7 +788,6 @@
 
   function restoreToTranslationOnly() {
     pendingTexts.clear();
-    processedIds.clear();
     failedBtns = new WeakMap();
     retryRemaining = 3;
 
@@ -815,7 +795,6 @@
       const tt = wrap.previousElementSibling;
       if (isTweetText(tt)) {
         tt.classList.remove('xtl-hidden');
-        const rec = records.get(tt);
         // BUG FIX: DO NOT manually set innerHTML to avoid React desync.
       }
       wrap.remove();
@@ -1129,7 +1108,7 @@
   }
 
   extensionObserver = new MutationObserver(() => { scheduleScan(); scheduleSaveButtonSync(); });
-  extensionObserver.observe(document.body, { childList: true, subtree: true });
+  if (document.body) extensionObserver.observe(document.body, { childList: true, subtree: true });
   dbg('init: MutationObserver attached');
   scheduleScan();
   scheduleSaveButtonSync();
@@ -1139,7 +1118,6 @@
   function cleanupExpiredEntries() {
     const now = Date.now();
     for (const [k, ts] of pendingTexts) { if (now - ts > PENDING_TTL) pendingTexts.delete(k); }
-    for (const [k, ts] of processedIds) { if (now - ts > PROCESSED_TTL) processedIds.delete(k); }
     // 清理断开的 recordNodes
     for (const tt of recordNodes) { if (!tt.isConnected) { recordNodes.delete(tt); records.delete(tt); } }
   }
@@ -1158,7 +1136,6 @@
       applyTransColor(d.transColor);
       applyFoldTitle(d.lang);
       contentLang = d.lang === 'en' ? 'en' : 'zh_CN';
-      initialized = true;
       dbg('init: storage loaded', { enabled, mode });
       scheduleScan();
       scheduleSaveButtonSync();

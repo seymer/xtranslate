@@ -101,6 +101,37 @@ test('corrupted stored data is treated as an empty list instead of crashing', ()
   assert.equal(savedTweets.toggle(null, tweet).saved, true);
 });
 
+test('dueToday returns items without reviewedOn as due, and skips today-reviewed ones', () => {
+  const now = new Date(2026, 10, 20, 12).getTime();
+  const items = [
+    { id: '1' },
+    { id: '2', reviewedOn: '2026-11-20' },
+    { id: '3', reviewedOn: '2026-11-21' }, // 未来的复习 —— 仍然 due
+  ];
+  assert.deepEqual(savedTweets.dueToday(items, now).map((i) => i.id), ['1', '3']);
+});
+
+test('markReviewed on a missing id returns the list unchanged', () => {
+  const items = [{ id: '1', reviewedOn: null }];
+  const result = savedTweets.markReviewed(items, 'nope', new Date(2026, 10, 20, 12).getTime());
+  assert.deepEqual(result, items);
+});
+
+test('formatExportText emits per-item sections for tweets with missing fields', () => {
+  const t = (key, value) => {
+    if (key === 'exportTitle') return 'T';
+    if (key === 'exportDate') return `D:${value ?? ''}`;
+    if (key === 'unknownAuthor') return 'U';
+    if (key === 'savedOn') return `S:${value}`;
+    if (key === 'translationLabel') return 'X';
+    return key;
+  };
+  const text = savedTweets.formatExportText([{ id: '1', savedAt: new Date(2026, 10, 20).getTime() }], t);
+  assert.match(text, /^T\n/);
+  assert.match(text, /【U】/);
+  assert.match(text, /S:20\d{2}-\d{2}-\d{2}/);
+});
+
 test('formatExportText includes title, saved date, original and translation text', () => {
   const t = (key, value) => {
     if (key === 'exportTitle') return 'Export file';

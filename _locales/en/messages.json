@@ -63,9 +63,6 @@
     "message": "Daily review ($1)",
     "description": "Open the daily tweet review page and show due count"
   },
-  "saveTweet": { "message": "Save tweet", "description": "Button to save the current tweet" },
-  "unsaveTweet": { "message": "Remove saved tweet", "description": "Click to unsave a saved tweet" },
-  "tweetSaved": { "message": "Saved", "description": "Tweet has been saved" },
   "reviewTitle": { "message": "Daily Tweet Review", "description": "Review page title" },
   "reviewToday": { "message": "Due today", "description": "Show today's review queue" },
   "reviewAll": { "message": "All saved", "description": "Show all saved tweets" },
@@ -77,7 +74,6 @@
   "markReviewed": { "message": "Mark reviewed today", "description": "Mark as reviewed for today" },
   "removeSaved": { "message": "Remove", "description": "Remove a saved tweet" },
   "savedOn": { "message": "Saved $1", "description": "Saved date" },
-  "reviewCount": { "message": "Reviewed $1 times", "description": "Review count" },
   "openTweet": { "message": "Open on X", "description": "Open original tweet" },
   "originalLabel": { "message": "Original", "description": "Original tweet label" },
   "translationLabel": { "message": "Translation", "description": "Translation label" },

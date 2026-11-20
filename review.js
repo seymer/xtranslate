@@ -195,6 +195,7 @@ async function refresh() {
 }
 
 function updateExportButtons() {
+  if (!exportSelectedBtn) return;
   const n = selected.size;
   exportSelectedBtn.textContent = n === 0 ? t('exportSelected') : `${t('exportSelected')} (${n})`;
   exportSelectedBtn.disabled = n === 0;
@@ -215,10 +216,10 @@ function exportTweets(items) {
   URL.revokeObjectURL(url);
 }
 
-exportSelectedBtn.addEventListener('click', () => {
+if (exportSelectedBtn) exportSelectedBtn.addEventListener('click', () => {
   exportTweets(allTweets.filter((t) => selected.has(t.id)));
 });
-exportAllBtn.addEventListener('click', () => exportTweets(allTweets));
+if (exportAllBtn) exportAllBtn.addEventListener('click', () => exportTweets(allTweets));
 
 async function clearAll() {
   if (!window.confirm(t('clearConfirm'))) return;
@@ -232,14 +233,15 @@ async function clearAll() {
 if (clearAllBtn) clearAllBtn.addEventListener('click', clearAll);
 
 async function updateSavedTweets(transform) {
+  const logError = (error) => { console.error('[XTL] review update failed:', error); };
   const operation = updateQueue.then(async () => {
     const data = await chrome.storage.local.get({ savedTweets: [] });
     const items = Array.isArray(data.savedTweets) ? data.savedTweets : [];
     await chrome.storage.local.set({ savedTweets: transform(items) });
     await refresh();
   });
-  updateQueue = operation.catch(() => {});
-  await operation.catch(() => {});
+  updateQueue = operation.catch(logError);
+  await operation.catch(logError);
 }
 
 if (viewToggle) viewToggle.addEventListener('click', () => {
@@ -247,10 +249,14 @@ if (viewToggle) viewToggle.addEventListener('click', () => {
   render();
 });
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.savedTweets) refresh();
+  if (area === 'local' && changes.savedTweets) refresh().catch((error) => console.error('[XTL] review refresh failed:', error));
 });
 
 (async () => {
-  await loadLanguage();
-  await refresh();
+  try {
+    await loadLanguage();
+    await refresh();
+  } catch (error) {
+    console.error('[XTL] review page init failed:', error);
+  }
 })();

@@ -10,7 +10,7 @@
   'use strict';
 
   const PURE_URL_RE = /^(https?:\/\/|www\.)\S+$|^[\w-]+(\.[\w-]+)+(\/\S*)?$/i;
-  function isPureUrl(s) { return PURE_URL_RE.test(s.trim()); }
+  function isPureUrl(s) { return PURE_URL_RE.test((s || '').trim()); }
 
   const ABBREVS = new Set([
     'vs', 'dr', 'mr', 'mrs', 'ms', 'prof', 'inc', 'ltd', 'corp', 'co', 'dept', 'est', 'vol', 'fig',
