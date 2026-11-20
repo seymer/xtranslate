@@ -50,20 +50,6 @@ function createButton(label, className, onClick) {
 function appendActions(card, tweet) {
   const actions = document.createElement('div');
   actions.className = 'card-actions';
-
-  const selectCb = document.createElement('input');
-  selectCb.type = 'checkbox';
-  selectCb.className = 'export-select';
-  selectCb.checked = selected.has(tweet.id);
-  selectCb.title = t('exportSelect');
-  selectCb.setAttribute('aria-label', t('exportSelect'));
-  selectCb.addEventListener('change', () => {
-    if (selectCb.checked) selected.add(tweet.id);
-    else selected.delete(tweet.id);
-    updateExportButtons();
-  });
-  actions.appendChild(selectCb);
-
   if (view === 'due') {
     actions.appendChild(createButton(t('markReviewed'), 'action-btn primary', async () => {
       await updateSavedTweets((items) => XTLSavedTweets.markReviewed(items, tweet.id));
@@ -134,6 +120,21 @@ function makeCard(tweet) {
 
   const meta = document.createElement('div');
   meta.className = 'tweet-meta';
+
+  // 选中收藏切换(靠近卡片顶部): 圆形对号开关, 明显好看
+  const selectCb = document.createElement('input');
+  selectCb.type = 'checkbox';
+  selectCb.className = 'export-select';
+  selectCb.checked = selected.has(tweet.id);
+  selectCb.setAttribute('aria-label', t('exportSelect'));
+  selectCb.title = t('exportSelect');
+  selectCb.addEventListener('change', () => {
+    if (selectCb.checked) selected.add(tweet.id);
+    else selected.delete(tweet.id);
+    updateExportButtons();
+  });
+  meta.appendChild(selectCb);
+
   const author = document.createElement('strong');
   author.textContent = tweet.author || t('unknownAuthor');
   const savedDate = document.createElement('span');
@@ -194,7 +195,9 @@ async function refresh() {
 }
 
 function updateExportButtons() {
-  exportSelectedBtn.disabled = selected.size === 0;
+  const n = selected.size;
+  exportSelectedBtn.textContent = n === 0 ? t('exportSelected') : `${t('exportSelected')} (${n})`;
+  exportSelectedBtn.disabled = n === 0;
 }
 
 function exportTweets(items) {

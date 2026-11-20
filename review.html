@@ -29,7 +29,8 @@
     #summary { margin: 0 0 16px; color: #8b98a5; }
     #list { display: grid; gap: 14px; }
     .tweet-card { padding: 18px; border: 1px solid #38444d; border-radius: 14px; background: #192734; }
-    .tweet-meta { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: #8b98a5; font-size: 13px; }
+    .tweet-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: #8b98a5; font-size: 13px; }
+    .tweet-meta > a { margin-left: auto; }
     .tweet-meta strong { color: #e7e9ea; font-size: 14px; }
     .tweet-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
     .translation { margin-top: 12px; padding: 10px 12px; border-left: 3px solid #1d9bf0; color: #b4c1ce; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -59,33 +60,35 @@
     .card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .action-btn.primary { border-color: #1d9bf0; color: #1d9bf0; }
     .export-btn { padding: 6px 12px; font-size: 13px; }
-    /* 选中的收藏勾选框：小圆邊 + 显示对号 */
+    /* 选中收藏：靠近卡片顶部的圆形开关 — 未勾选空心框，勾选实心蓝+白对号 */
     .export-select {
-      margin: 0;
-      width: 22px;
-      height: 22px;
-      flex: none;
-      border: 2px solid #38444d;
-      border-radius: 5px;
-      background: #192734;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      flex: none;
+      width: 26px;
+      height: 26px;
+      border: 2px solid #536471;
+      border-radius: 50%;
+      background: #192734;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
     }
     .export-select::after {
       content: "✓";
-      font-size: 12px;
+      font-size: 13px;
       line-height: 1;
-      color: #1d9bf0;
-      opacity: 0;
-      transition: opacity 0.15s;
+      color: transparent;
+      transition: color 0.15s;
     }
-    .export-select:checked { border-color: #1d9bf0; background: #16222f; }
-    .export-select:checked::after { opacity: 1; }
+    .export-select:checked {
+      border-color: #1d9bf0;
+      background: #1d9bf0;
+      box-shadow: 0 0 0 2px rgba(29, 155, 240, 0.22);
+    }
+    .export-select:checked::after { color: #fff; }
     .export-select:hover { border-color: #1d9bf0; }
-    .export-select:focus-visible { outline: 2px solid #1d9bf0; outline-offset: 1px; }
+    .export-select:focus-visible { outline: 2px solid #1d9bf0; outline-offset: 2px; }
     .empty { padding: 36px 18px; text-align: center; color: #8b98a5; border: 1px dashed #38444d; border-radius: 14px; }
     @media (max-width: 520px) {
       main { margin: 20px auto; }
