@@ -942,6 +942,42 @@
     return null;
   }
 
+  // 文章页: 从状态链接推断作者名(文章页没有 data-testid="User-Name")
+  function findArticleAuthorName(article) {
+    const statusLink = Array.from(article.querySelectorAll('a[href*="/status/"]'))
+      .find((node) => node.closest('article') === article);
+    const m = statusLink && statusLink.href.match(/\/([^/?#]+)\/status\/\d+/);
+    return m ? m[1] : '';
+  }
+
+  // 文章页: 找到作者行(头像容器所在行), 将收藏星放在作者名一行末尾
+  function findArticleHeaderRow(article) {
+    const authorName = findArticleAuthorName(article);
+    if (!authorName) return null;
+    const authorLink = Array.from(article.querySelectorAll(`a[href="/${authorName}"]`))
+      .find((node) => node.closest('article') === article);
+    if (!authorLink) return null;
+    const avatarCol = authorLink.closest('div[data-post-avatar]');
+    if (avatarCol && avatarCol.parentElement) {
+      return avatarCol.parentElement.parentElement || avatarCol.parentElement;
+    }
+    return authorLink.parentElement;
+  }
+
+  // 文章页: 找到文章的正文文本节点(长文无 data-testid="tweetText", 取文章内最长的叶子文本)
+  function findArticleTextNode(article) {
+    const byId = Array.from(article.querySelectorAll('div[data-testid="tweetText"]'))
+      .find((node) => node.closest('article') === article);
+    if (byId) return byId;
+    const headerRow = findArticleHeaderRow(article);
+    const texts = Array.from(article.querySelectorAll('div'))
+      .filter((n) => n.closest('article') === article)
+      .filter((n) => !headerRow || !headerRow.contains(n))
+      .filter((n) => n.childElementCount === 0 && n.textContent.trim().length >= 5)
+      .sort((a, b) => b.textContent.length - a.textContent.length);
+    return texts[0] || article;
+  }
+
   function placeSaveButton(article, button) {
     // 时间线: 旁边 Grok 控件(插入为兄弟节点)
     const grokControl = findGrokControl(article);
@@ -962,8 +998,15 @@
       return;
     }
 
-    // 文章页(无 Grok 横幅、无 action bar): star 作为 article 的第一个子元素
-    // xtl-save-btn--top(margin-left: auto) 实现右对齐 — 长文推文不再把星塞到文末。
+    // 文章页: 挂到作者行末尾(靠近推文顶部, 与作者同行)
+    const headerRow = findArticleHeaderRow(article);
+    if (headerRow) {
+      button.classList.remove('xtl-save-btn--top');
+      if (button.parentElement !== headerRow || headerRow.lastElementChild !== button) headerRow.appendChild(button);
+      return;
+    }
+
+    // 文章页兜底: star 作为 article 第一个子元素(margin-left: auto 右对齐)
     button.classList.add('xtl-save-btn--top');
     if (article.firstElementChild !== button) article.insertBefore(button, article.firstElementChild);
   }
@@ -1026,13 +1069,16 @@
       const record = tweetText ? records.get(tweetText) : null;
       const origHTML = record ? record.origHTML : (tweetText ? tweetText.innerHTML : '');
       const transHTML = record ? record.transHTML : '';
+      // 文章页兜底: 没有 User-Name/tweetText 时用文章内文本节点, 作者用状态链接推断
+      const textNode = tweetText || findArticleTextNode(article);
       const authorNode = Array.from(article.querySelectorAll('[data-testid="User-Name"]'))
         .find((node) => node.closest('article') === article);
+      const author = authorNode ? norm(authorNode.innerText) : findArticleAuthorName(article);
       const tweet = {
         id: tweetId,
         url: `https://x.com/i/status/${tweetId}`,
-        author: norm(authorNode && authorNode.innerText) || '',
-        text: htmlToText(origHTML) || (tweetText ? norm(tweetText.textContent) : ''),
+        author,
+        text: htmlToText(origHTML) || norm(textNode.textContent) || '',
         translation: transHTML ? htmlToText(transHTML) : '',
         savedAt: Date.now(),
       };
