@@ -46,6 +46,12 @@
 
   let enabled = true;
   let mode = 'interleave';
+  // 模糊模式：'none' | 'orig' | 'trans'。同一时间只允许一侧模糊。
+  let blurMode = 'none';
+  // 遮挡范围：'keyword' 只遮挡每句一个关键词；'sentence' 遮挡整句。
+  let maskScope = 'keyword';
+  // 遮挡风格：'blur-soft' | 'blur' | 'blur-strong' | 'bar' | 'dotted'
+  let maskStyle = 'blur';
 
   const records = new WeakMap();      // tweetText → { tweetId, transHTML, origHTML, note, origText, head, transHead }
   const recordNodes = new Set();      // 所有有 record 的节点（可遍历，配合 WeakMap）
@@ -216,8 +222,12 @@
         origSents.forEach((orig, si) => {
           const pair = document.createElement('div');
           pair.className = 'xtl-pair';
-          const o = document.createElement('div'); o.className = 'xtl-orig'; o.textContent = norm(orig); pair.appendChild(o);
-          const t = document.createElement('div'); t.className = 'xtl-trans'; t.textContent = norm(transSents[si]); pair.appendChild(t);
+          const o = document.createElement('div'); o.className = 'xtl-orig'; o.textContent = norm(orig);
+          decorateMask(o, 'orig');
+          pair.appendChild(o);
+          const t = document.createElement('div'); t.className = 'xtl-trans'; t.textContent = norm(transSents[si]);
+          decorateMask(t, 'trans');
+          pair.appendChild(t);
           container.appendChild(pair);
         });
       } else {
@@ -234,6 +244,8 @@
           o.textContent = norm(origPara);
           t.textContent = norm(transPara);
         }
+        decorateMask(o, 'orig');
+        decorateMask(t, 'trans');
         
         pair.appendChild(o);
         pair.appendChild(t);
@@ -466,6 +478,102 @@
     else root.style.removeProperty('--xtl-trans-color-dark');
   }
 
+  /* ==================== 模糊 / 遮挡模式 ==================== */
+  // 同一时间只允许「原文」或「译文」其中一侧模糊；悬停到具体句子时临时清晰。
+  const MASK_STYLES = ['blur-soft', 'blur', 'blur-strong', 'bar', 'dotted'];
+  const MASK_STYLE_CLASSES = MASK_STYLES.map((name) => 'xtl-mask-' + name);
+
+  function normalizeBlurMode(value) {
+    return value === 'orig' || value === 'trans' ? value : 'none';
+  }
+
+  function normalizeMaskScope(value) {
+    return value === 'sentence' ? 'sentence' : 'keyword';
+  }
+
+  function normalizeMaskStyle(value) {
+    return MASK_STYLES.includes(value) ? value : 'blur';
+  }
+
+  function applyBlurMode(value) {
+    if (value !== undefined) blurMode = normalizeBlurMode(value);
+    const root = document.documentElement;
+    const active = enabled && blurMode !== 'none';
+    root.classList.toggle('xtl-blur-orig', active && blurMode === 'orig');
+    root.classList.toggle('xtl-blur-trans', active && blurMode === 'trans');
+  }
+
+  function applyMaskStyle(value) {
+    if (value !== undefined) maskStyle = normalizeMaskStyle(value);
+    const root = document.documentElement;
+    root.classList.remove(...MASK_STYLE_CLASSES);
+    root.classList.add('xtl-mask-' + maskStyle);
+  }
+
+  function applyMaskScope(value) {
+    const next = normalizeMaskScope(value);
+    if (next === maskScope) return;
+    maskScope = next;
+    if (enabled) rebuildAll();
+  }
+
+  function keywordApi() {
+    return typeof XTLKeywords !== 'undefined' ? XTLKeywords : null;
+  }
+
+  /** 给元素加上遮挡标记；关键词模式下优先只遮挡关键词，找不到时退回整句。 */
+  function decorateMask(el, side) {
+    if (!el) return;
+    if (maskScope === 'sentence') {
+      el.classList.add('xtl-mask-' + side);
+      return;
+    }
+    if (maskKeywordsInElement(el, side)) return;
+    el.classList.add('xtl-mask-' + side);
+  }
+
+  /** 在元素内部查找文本节点，把每句选中的关键词包成可悬停的 span。 */
+  function maskKeywordsInElement(root, side) {
+    const api = keywordApi();
+    if (!api || !root) return false;
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        const parent = node.parentElement;
+        if (!parent) return NodeFilter.FILTER_REJECT;
+        if (parent.closest('a, .xtl-keyword, script, style')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+    let masked = false;
+    for (const node of textNodes) {
+      const text = node.nodeValue;
+      const keywords = api.chooseKeywords(text);
+      if (keywords.length === 0) continue;
+      const parts = api.splitByKeywords(text, keywords);
+      if (!parts.some((part) => part.match)) continue;
+
+      const fragment = document.createDocumentFragment();
+      for (const part of parts) {
+        if (!part.match) {
+          fragment.appendChild(document.createTextNode(part.text));
+          continue;
+        }
+        const span = document.createElement('span');
+        span.className = 'xtl-keyword xtl-mask-' + side;
+        span.textContent = part.text;
+        fragment.appendChild(span);
+      }
+      node.parentNode.replaceChild(fragment, node);
+      masked = true;
+    }
+    return masked;
+  }
+
   function createBlockWrap(rec, bodyClass, bodyHTML) {
     const block = document.createElement('div');
     block.className = 'xtl-wrap';
@@ -479,6 +587,7 @@
     const body = document.createElement('div');
     body.className = bodyClass;
     body.innerHTML = bodyHTML;
+    decorateMask(body, 'trans');
     block.appendChild(body);
     block.__xtlTrans = rec.transHTML;
     block.__xtlMode = 'block';
@@ -488,6 +597,8 @@
   function insertWrap(tweetText, wrap, hide) {
     if (!tweetText.isConnected) return;
     tweetText.classList.toggle('xtl-hidden', !!hide);
+    // block 模式下原文就是官方 tweetText；关键词模式无法安全改写官方 DOM，因此整块遮挡。
+    tweetText.classList.toggle('xtl-mask-orig', !hide);
     tweetText.parentElement.insertBefore(wrap, tweetText.nextSibling);
   }
 
@@ -507,8 +618,8 @@
     if (tweetText.matches('div[data-testid="UserDescription"]')) {
       const block = createBlockWrap(rec, 'xtl-trans', rec.transHTML);
       block.removeChild(block.lastChild);
-      const origBody = document.createElement('div'); origBody.className = 'xtl-interleave-orig'; origBody.innerHTML = rec.origHTML || ''; block.appendChild(origBody);
-      const transBody = document.createElement('div'); transBody.className = 'xtl-interleave-trans'; transBody.innerHTML = rec.transHTML; block.appendChild(transBody);
+      const origBody = document.createElement('div'); origBody.className = 'xtl-interleave-orig'; origBody.innerHTML = rec.origHTML || ''; decorateMask(origBody, 'orig'); block.appendChild(origBody);
+      const transBody = document.createElement('div'); transBody.className = 'xtl-interleave-trans'; transBody.innerHTML = rec.transHTML; decorateMask(transBody, 'trans'); block.appendChild(transBody);
       insertWrap(tweetText, block, true);
       dbg('buildAndInsert: UserDescription');
       return;
@@ -578,6 +689,7 @@
   function deleteRecord(node) {
     records.delete(node);
     recordNodes.delete(node);
+    if (node && node.classList) node.classList.remove('xtl-mask-orig');
   }
 
   /** 包装 processPair 并设置超时保护，防止单条推文阻塞整个 scan */
@@ -795,6 +907,7 @@
       const tt = wrap.previousElementSibling;
       if (isTweetText(tt)) {
         tt.classList.remove('xtl-hidden');
+        tt.classList.remove('xtl-mask-orig');
         // BUG FIX: DO NOT manually set innerHTML to avoid React desync.
       }
       wrap.remove();
@@ -808,8 +921,10 @@
         if (child !== tt && child.classList && child.classList.contains('xtl-wrap')) child.remove();
       });
       tt.classList.remove('xtl-hidden');
+      tt.classList.remove('xtl-mask-orig');
     });
 
+    applyBlurMode();
     // BUG FIX: Do not clear recordNodes so rebuildAll can restore instantly.
   }
 
@@ -837,6 +952,7 @@
       removeAllWraps(tt);
       buildAndInsert(tt, rec);
     }
+    applyBlurMode();
   }
 
   /* ==================== 收藏推文 ==================== */
@@ -1078,6 +1194,12 @@
       if (newMode !== mode) { mode = newMode; if (enabled) rebuildAll(); }
     } else if (msg.type === 'XTL_TRANS_COLOR') {
       applyTransColor(msg.transColor);
+    } else if (msg.type === 'XTL_BLUR') {
+      applyBlurMode(msg.blurMode);
+    } else if (msg.type === 'XTL_MASK_SCOPE') {
+      applyMaskScope(msg.maskScope);
+    } else if (msg.type === 'XTL_MASK_STYLE') {
+      applyMaskStyle(msg.maskStyle);
     }
   });
 
@@ -1123,20 +1245,23 @@
   }
   extensionTimers.push(setInterval(cleanupExpiredEntries, 15000));
 
-  console.info('[XTL] content script ready - build 2026-11-20-audit');
+  console.info('[XTL] content script ready - build 2026-11-21-keyword-mask');
 
   (function loadInitialSettings() {
     if (!extensionContextAlive) return;
     let storage;
     try { storage = chrome.storage.local; } catch (error) { handleStorageError(error); return; }
-    XTLSavedTweets.safeStorageGet(storage, ['enabled', 'mode', 'transColor', 'lang'], (d) => {
+    XTLSavedTweets.safeStorageGet(storage, ['enabled', 'mode', 'transColor', 'blurMode', 'maskScope', 'maskStyle', 'lang'], (d) => {
       if (!extensionContextAlive) return;
       enabled = d.enabled !== false;
       mode = d.mode === 'block' ? 'block' : 'interleave';
+      maskScope = normalizeMaskScope(d.maskScope);
       applyTransColor(d.transColor);
+      applyMaskStyle(d.maskStyle);
+      applyBlurMode(d.blurMode);
       applyFoldTitle(d.lang);
       contentLang = d.lang === 'en' ? 'en' : 'zh_CN';
-      dbg('init: storage loaded', { enabled, mode });
+      dbg('init: storage loaded', { enabled, mode, blurMode, maskScope, maskStyle });
       scheduleScan();
       scheduleSaveButtonSync();
     }, handleStorageError);
@@ -1162,6 +1287,15 @@
     }
     if (changes.transColor) {
       applyTransColor(changes.transColor.newValue);
+    }
+    if (changes.blurMode) {
+      applyBlurMode(changes.blurMode.newValue);
+    }
+    if (changes.maskScope) {
+      applyMaskScope(changes.maskScope.newValue);
+    }
+    if (changes.maskStyle) {
+      applyMaskStyle(changes.maskStyle.newValue);
     }
     if (changes.lang) {
       applyFoldTitle(changes.lang.newValue);

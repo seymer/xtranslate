@@ -59,6 +59,62 @@
     "message": "Green",
     "description": "Color preset: green"
   },
+  "blurLabel": {
+    "message": "Blur",
+    "description": "Blur display setting label"
+  },
+  "blurNone": {
+    "message": "Off",
+    "description": "Blur display: off"
+  },
+  "blurOrig": {
+    "message": "Blur original",
+    "description": "Blur display: blur original text"
+  },
+  "blurTrans": {
+    "message": "Blur translation",
+    "description": "Blur display: blur translated text"
+  },
+  "maskScopeLabel": {
+    "message": "Mask scope",
+    "description": "Mask scope setting label"
+  },
+  "maskScopeKeyword": {
+    "message": "Keywords",
+    "description": "Mask scope: one keyword per sentence"
+  },
+  "maskScopeSentence": {
+    "message": "Sentence",
+    "description": "Mask scope: whole sentence"
+  },
+  "maskStyleLabel": {
+    "message": "Mask style",
+    "description": "Mask style setting label"
+  },
+  "maskStyleBlurSoft": {
+    "message": "Soft blur",
+    "description": "Mask style: soft blur"
+  },
+  "maskStyleBlur": {
+    "message": "Medium blur",
+    "description": "Mask style: medium blur"
+  },
+  "maskStyleBlurStrong": {
+    "message": "Strong blur",
+    "description": "Mask style: strong blur"
+  },
+  "maskStyleBar": {
+    "message": "Solid bar",
+    "description": "Mask style: solid bar"
+  },
+  "maskStyleDotted": {
+    "message": "Dashed underline",
+    "description": "Mask style: dashed underline"
+  },
+  "hintBlur": {
+    "message": "Only one side masks at a time. Hover about 0.5s to reveal.",
+    "description": "Popup blur display hint"
+  },
   "reviewButton": {
     "message": "Daily review ($1)",
     "description": "Open the daily tweet review page and show due count"

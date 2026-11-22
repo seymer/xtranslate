@@ -2,6 +2,9 @@
 const toggle = document.getElementById('toggle');
 const modeBtns = document.querySelectorAll('.mode-btn');
 const transColor = document.getElementById('transColor');
+const blurMode = document.getElementById('blurMode');
+const maskScope = document.getElementById('maskScope');
+const maskStyle = document.getElementById('maskStyle');
 const langBtns = document.querySelectorAll('.lang-btn');
 const reviewButton = document.getElementById('reviewButton');
 
@@ -42,8 +45,8 @@ async function setManualLang(lang) {
   } catch (_) { /* 加载失败则保持浏览器语言 */ }
 }
 
-// 初始化：读取当前状态（默认开启 + 逐句模式 + 默认灰 + 自动语言）
-chrome.storage.local.get(['enabled', 'mode', 'transColor', 'lang'], (d) => {
+// 初始化：读取当前状态（默认开启 + 逐句模式 + 默认蓝 + 不模糊 + 自动语言）
+chrome.storage.local.get(['enabled', 'mode', 'transColor', 'blurMode', 'maskScope', 'maskStyle', 'lang'], (d) => {
   toggle.checked = d.enabled !== false;
   const currentMode = d.mode === 'block' ? 'block' : 'interleave';
   modeBtns.forEach((btn) => {
@@ -51,6 +54,10 @@ chrome.storage.local.get(['enabled', 'mode', 'transColor', 'lang'], (d) => {
   });
   // 旧版“blue”选项已并入默认蓝色，旧数据映射为 default
   transColor.value = (d.transColor === 'text' || d.transColor === 'green') ? d.transColor : 'default';
+  blurMode.value = (d.blurMode === 'orig' || d.blurMode === 'trans') ? d.blurMode : 'none';
+  maskScope.value = d.maskScope === 'sentence' ? 'sentence' : 'keyword';
+  const maskStyles = ['blur-soft', 'blur', 'blur-strong', 'bar', 'dotted'];
+  maskStyle.value = maskStyles.includes(d.maskStyle) ? d.maskStyle : 'blur';
 
   manualLang = d.lang === 'zh_CN' || d.lang === 'en' ? d.lang : 'zh_CN';
   langBtns.forEach((btn) => {
@@ -91,6 +98,29 @@ transColor.addEventListener('change', () => {
   const color = transColor.value;
   chrome.storage.local.set({ transColor: color });
   sendMessage({ type: 'XTL_TRANS_COLOR', transColor: color });
+});
+
+// 切换模糊显示：同一时间只允许原文或译文其中一侧模糊
+blurMode.addEventListener('change', () => {
+  const mode = blurMode.value === 'orig' || blurMode.value === 'trans' ? blurMode.value : 'none';
+  chrome.storage.local.set({ blurMode: mode });
+  sendMessage({ type: 'XTL_BLUR', blurMode: mode });
+});
+
+// 切换遮挡范围：关键词 / 整句
+maskScope.addEventListener('change', () => {
+  const scope = maskScope.value === 'sentence' ? 'sentence' : 'keyword';
+  chrome.storage.local.set({ maskScope: scope });
+  sendMessage({ type: 'XTL_MASK_SCOPE', maskScope: scope });
+});
+
+// 切换遮挡风格与模糊强度
+maskStyle.addEventListener('change', () => {
+  const style = ['blur-soft', 'blur', 'blur-strong', 'bar', 'dotted'].includes(maskStyle.value)
+    ? maskStyle.value
+    : 'blur';
+  chrome.storage.local.set({ maskStyle: style });
+  sendMessage({ type: 'XTL_MASK_STYLE', maskStyle: style });
 });
 
 // 切换界面语言，重载弹窗使其生效

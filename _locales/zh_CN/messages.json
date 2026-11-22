@@ -59,6 +59,62 @@
     "message": "绿色",
     "description": "颜色预设：绿色"
   },
+  "blurLabel": {
+    "message": "模糊显示",
+    "description": "模糊显示设置标签"
+  },
+  "blurNone": {
+    "message": "关闭",
+    "description": "模糊显示：关闭"
+  },
+  "blurOrig": {
+    "message": "原文模糊",
+    "description": "模糊显示：模糊原文"
+  },
+  "blurTrans": {
+    "message": "译文模糊",
+    "description": "模糊显示：模糊译文"
+  },
+  "maskScopeLabel": {
+    "message": "遮挡范围",
+    "description": "遮挡范围设置标签"
+  },
+  "maskScopeKeyword": {
+    "message": "关键词",
+    "description": "遮挡范围：每句一个关键词"
+  },
+  "maskScopeSentence": {
+    "message": "整句",
+    "description": "遮挡范围：整句"
+  },
+  "maskStyleLabel": {
+    "message": "遮挡风格",
+    "description": "遮挡风格设置标签"
+  },
+  "maskStyleBlurSoft": {
+    "message": "轻模糊",
+    "description": "遮挡风格：轻模糊"
+  },
+  "maskStyleBlur": {
+    "message": "中模糊",
+    "description": "遮挡风格：中模糊"
+  },
+  "maskStyleBlurStrong": {
+    "message": "强模糊",
+    "description": "遮挡风格：强模糊"
+  },
+  "maskStyleBar": {
+    "message": "色块",
+    "description": "遮挡风格：色块"
+  },
+  "maskStyleDotted": {
+    "message": "虚线下划线",
+    "description": "遮挡风格：虚线下划线"
+  },
+  "hintBlur": {
+    "message": "同一时间只遮挡一侧，悬停约 0.5 秒显示。",
+    "description": "弹窗模糊显示提示"
+  },
   "reviewButton": {
     "message": "每日复习（$1）",
     "description": "打开每日推文复习页和待复习数量"

@@ -189,11 +189,43 @@
     </label>
   </div>
   <div class="row">
+    <label for="blurMode">
+      <span data-i18n="blurLabel">模糊显示</span>
+      <select id="blurMode">
+        <option value="none" data-i18n="blurNone">关闭</option>
+        <option value="orig" data-i18n="blurOrig">原文模糊</option>
+        <option value="trans" data-i18n="blurTrans">译文模糊</option>
+      </select>
+    </label>
+  </div>
+  <div class="row">
+    <label for="maskScope">
+      <span data-i18n="maskScopeLabel">遮挡范围</span>
+      <select id="maskScope">
+        <option value="keyword" data-i18n="maskScopeKeyword">关键词</option>
+        <option value="sentence" data-i18n="maskScopeSentence">整句</option>
+      </select>
+    </label>
+  </div>
+  <div class="row">
+    <label for="maskStyle">
+      <span data-i18n="maskStyleLabel">遮挡风格</span>
+      <select id="maskStyle">
+        <option value="blur-soft" data-i18n="maskStyleBlurSoft">轻模糊</option>
+        <option value="blur" data-i18n="maskStyleBlur" selected>中模糊</option>
+        <option value="blur-strong" data-i18n="maskStyleBlurStrong">强模糊</option>
+        <option value="bar" data-i18n="maskStyleBar">色块</option>
+        <option value="dotted" data-i18n="maskStyleDotted">虚线下划线</option>
+      </select>
+    </label>
+  </div>
+  <div class="row">
     <button id="reviewButton" class="review-btn" data-i18n="reviewButton">每日复习（0）</button>
   </div>
   <p class="hint">
     <span data-i18n="hintToggle">快捷键：</span><kbd>Alt</kbd> + <kbd>B</kbd><br />
-    <span data-i18n="hintCollapse">点「翻译自 xxx」可折叠译文。</span>
+    <span data-i18n="hintCollapse">点「翻译自 xxx」可折叠译文。</span><br />
+    <span data-i18n="hintBlur">同一时间只遮挡一侧，悬停约 0.5 秒显示。</span>
   </p>
   <script src="saved-tweets.js"></script>
   <script src="popup.js"></script>

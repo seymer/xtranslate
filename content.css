@@ -154,3 +154,59 @@
 .xtl-interleave.xtl-collapsed .xtl-pair .xtl-trans {
   display: none;
 }
+
+/* ---- 模糊 / 遮挡：悬停约 0.5 秒后显示，移开立即恢复 ---- */
+html.xtl-blur-orig .xtl-mask-orig,
+html.xtl-blur-trans .xtl-mask-trans {
+  filter: var(--xtl-mask-filter, blur(5px));
+  background-color: var(--xtl-mask-bg, transparent);
+  border-bottom: var(--xtl-mask-border, none);
+  border-radius: var(--xtl-mask-radius, 2px);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: filter 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+  transition-delay: 0s;
+  cursor: pointer;
+}
+
+/* 关键词较短时稍微扩大悬停区域，同时用负外边距保持排版不变 */
+html.xtl-blur-orig .xtl-keyword.xtl-mask-orig,
+html.xtl-blur-trans .xtl-keyword.xtl-mask-trans {
+  padding: 0 1px;
+  margin: 0 -1px;
+}
+
+html.xtl-blur-orig .xtl-mask-orig:hover,
+html.xtl-blur-trans .xtl-mask-trans:hover {
+  filter: none;
+  background-color: transparent;
+  border-bottom-color: transparent;
+  transition-delay: var(--xtl-mask-delay, 0.5s);
+}
+
+/* 遮挡风格：模糊强度 / 色块 / 虚线下划线 */
+html.xtl-mask-blur-soft {
+  --xtl-mask-filter: blur(3px);
+}
+html.xtl-mask-blur {
+  --xtl-mask-filter: blur(5px);
+}
+html.xtl-mask-blur-strong {
+  --xtl-mask-filter: blur(8px);
+}
+html.xtl-mask-bar {
+  --xtl-mask-filter: blur(10px);
+  --xtl-mask-bg: rgba(113, 118, 123, 0.55);
+  --xtl-mask-radius: 3px;
+}
+html.xtl-mask-dotted {
+  --xtl-mask-filter: blur(4px);
+  --xtl-mask-border: 1px dashed currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.xtl-blur-orig .xtl-mask-orig,
+  html.xtl-blur-trans .xtl-mask-trans {
+    transition: none;
+  }
+}
