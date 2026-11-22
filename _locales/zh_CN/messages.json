@@ -111,8 +111,12 @@
     "message": "虚线下划线",
     "description": "遮挡风格：虚线下划线"
   },
+  "glossLabel": {
+    "message": "下划线查词",
+    "description": "关键词加下划线，悬停显示词典释义"
+  },
   "hintBlur": {
-    "message": "同一时间只遮挡一侧，悬停约 0.5 秒显示。",
+    "message": "关键词带下划线；悬停约 0.5 秒显示并弹出本地释义。遮挡同一时间只作用于一侧。",
     "description": "弹窗模糊显示提示"
   },
   "reviewButton": {

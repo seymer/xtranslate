@@ -52,6 +52,8 @@
   let maskScope = 'keyword';
   // 遮挡风格：'blur-soft' | 'blur' | 'blur-strong' | 'bar' | 'dotted'
   let maskStyle = 'blur';
+  // 悬停关键词时显示本地词典释义
+  let glossEnabled = true;
 
   const records = new WeakMap();      // tweetText → { tweetId, transHTML, origHTML, note, origText, head, transHead }
   const recordNodes = new Set();      // 所有有 record 的节点（可遍历，配合 WeakMap）
@@ -521,15 +523,19 @@
     return typeof XTLKeywords !== 'undefined' ? XTLKeywords : null;
   }
 
-  /** 给元素加上遮挡标记；关键词模式下优先只遮挡关键词，找不到时退回整句。 */
+  /** 总是先尝试包出关键词 span（供下划线查词使用），再决定是否整句遮挡。 */
+  function isNonEnglishText(text) {
+    return typeof XTLKeywords !== 'undefined' && XTLKeywords.isCJK(text || '');
+  }
+
   function decorateMask(el, side) {
     if (!el) return;
-    if (maskScope === 'sentence') {
+    // 只对英文做遮挡/查词；中文等非英文内容保持原样。
+    if (isNonEnglishText(el.textContent || '')) return;
+    const hasKeywords = maskKeywordsInElement(el, side);
+    if (maskScope === 'sentence' || !hasKeywords) {
       el.classList.add('xtl-mask-' + side);
-      return;
     }
-    if (maskKeywordsInElement(el, side)) return;
-    el.classList.add('xtl-mask-' + side);
   }
 
   /** 在元素内部查找文本节点，把每句选中的关键词包成可悬停的 span。 */
@@ -574,6 +580,100 @@
     return masked;
   }
 
+  /* ==================== 悬停释义 ==================== */
+
+  let glossTip = null;
+  let glossTimer = null;
+  let glossActiveWord = null;
+
+  function ensureGlossTip() {
+    if (glossTip) return glossTip;
+    glossTip = document.createElement('div');
+    glossTip.className = 'xtl-gloss';
+    glossTip.setAttribute('role', 'tooltip');
+    (document.body || document.documentElement).appendChild(glossTip);
+    return glossTip;
+  }
+
+  function positionGlossTip(tip, x, y) {
+    const pad = 12;
+    const rect = tip.getBoundingClientRect();
+    let left = x + pad;
+    let top = y + pad;
+    if (left + rect.width > window.innerWidth - 8) left = x - rect.width - pad;
+    if (top + rect.height > window.innerHeight - 8) top = y - rect.height - pad;
+    tip.style.left = Math.max(8, left) + 'px';
+    tip.style.top = Math.max(8, top) + 'px';
+  }
+
+  function hideGloss() {
+    if (glossTimer) { clearTimeout(glossTimer); glossTimer = null; }
+    glossActiveWord = null;
+    if (glossTip) glossTip.classList.remove('xtl-gloss-visible');
+  }
+
+  function showGloss(keyword, event) {
+    if (!glossEnabled || typeof XTLDictionary === 'undefined') return;
+    const word = norm(keyword.textContent);
+    if (!word || isNonEnglishText(word)) return;
+    hideGloss();
+    glossActiveWord = word;
+    const x = event.clientX;
+    const y = event.clientY;
+    glossTimer = setTimeout(() => {
+      glossTimer = null;
+      if (glossActiveWord !== word) return;
+      XTLDictionary.lookup(word).then((entry) => {
+        if (!entry || glossActiveWord !== word) return;
+        const tip = ensureGlossTip();
+        tip.replaceChildren();
+
+        const head = document.createElement('div');
+        head.className = 'xtl-gloss-head';
+        head.textContent = entry.p ? entry.w + '  /' + entry.p + '/' : entry.w;
+        tip.appendChild(head);
+
+        if (entry.t) {
+          const body = document.createElement('div');
+          body.className = 'xtl-gloss-body';
+          body.textContent = entry.t;
+          tip.appendChild(body);
+        }
+
+        if (entry.f) {
+          const meta = document.createElement('div');
+          meta.className = 'xtl-gloss-meta';
+          meta.textContent = '词频 ' + entry.f;
+          tip.appendChild(meta);
+        }
+
+        tip.classList.add('xtl-gloss-visible');
+        positionGlossTip(tip, x, y);
+      });
+    }, 500);
+  }
+
+  document.addEventListener('mouseover', (e) => {
+    if (!e.target || !e.target.closest) return;
+    const keyword = e.target.closest('.xtl-keyword');
+    if (keyword) showGloss(keyword, e);
+    else hideGloss();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (glossTip && glossTip.classList.contains('xtl-gloss-visible')) {
+      positionGlossTip(glossTip, e.clientX, e.clientY);
+    }
+  });
+
+  document.addEventListener('scroll', hideGloss, true);
+
+  function applyGlossEnabled(value) {
+    if (value !== undefined) glossEnabled = !!value;
+    document.documentElement.classList.toggle('xtl-gloss-on', glossEnabled);
+    if (!glossEnabled) hideGloss();
+  }
+
   function createBlockWrap(rec, bodyClass, bodyHTML) {
     const block = document.createElement('div');
     block.className = 'xtl-wrap';
@@ -597,8 +697,9 @@
   function insertWrap(tweetText, wrap, hide) {
     if (!tweetText.isConnected) return;
     tweetText.classList.toggle('xtl-hidden', !!hide);
-    // block 模式下原文就是官方 tweetText；关键词模式无法安全改写官方 DOM，因此整块遮挡。
-    tweetText.classList.toggle('xtl-mask-orig', !hide);
+    // block 模式下原文就是官方 tweetText；只对英文整块遮挡，非英文保持原样。
+    const englishSource = !isNonEnglishText(tweetText.textContent || '');
+    tweetText.classList.toggle('xtl-mask-orig', !hide && englishSource);
     tweetText.parentElement.insertBefore(wrap, tweetText.nextSibling);
   }
 
@@ -1200,6 +1301,8 @@
       applyMaskScope(msg.maskScope);
     } else if (msg.type === 'XTL_MASK_STYLE') {
       applyMaskStyle(msg.maskStyle);
+    } else if (msg.type === 'XTL_GLOSS') {
+      applyGlossEnabled(msg.glossEnabled);
     }
   });
 
@@ -1251,7 +1354,7 @@
     if (!extensionContextAlive) return;
     let storage;
     try { storage = chrome.storage.local; } catch (error) { handleStorageError(error); return; }
-    XTLSavedTweets.safeStorageGet(storage, ['enabled', 'mode', 'transColor', 'blurMode', 'maskScope', 'maskStyle', 'lang'], (d) => {
+    XTLSavedTweets.safeStorageGet(storage, ['enabled', 'mode', 'transColor', 'blurMode', 'maskScope', 'maskStyle', 'glossEnabled', 'lang'], (d) => {
       if (!extensionContextAlive) return;
       enabled = d.enabled !== false;
       mode = d.mode === 'block' ? 'block' : 'interleave';
@@ -1259,6 +1362,7 @@
       applyTransColor(d.transColor);
       applyMaskStyle(d.maskStyle);
       applyBlurMode(d.blurMode);
+      applyGlossEnabled(d.glossEnabled === undefined ? true : d.glossEnabled);
       applyFoldTitle(d.lang);
       contentLang = d.lang === 'en' ? 'en' : 'zh_CN';
       dbg('init: storage loaded', { enabled, mode, blurMode, maskScope, maskStyle });
@@ -1296,6 +1400,9 @@
     }
     if (changes.maskStyle) {
       applyMaskStyle(changes.maskStyle.newValue);
+    }
+    if (changes.glossEnabled) {
+      applyGlossEnabled(changes.glossEnabled.newValue);
     }
     if (changes.lang) {
       applyFoldTitle(changes.lang.newValue);

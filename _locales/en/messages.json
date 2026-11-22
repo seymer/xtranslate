@@ -111,8 +111,12 @@
     "message": "Dashed underline",
     "description": "Mask style: dashed underline"
   },
+  "glossLabel": {
+    "message": "Underline lookup",
+    "description": "Underline keywords and show dictionary definition on hover"
+  },
   "hintBlur": {
-    "message": "Only one side masks at a time. Hover about 0.5s to reveal.",
+    "message": "Keywords are underlined. Hover ~0.5s to reveal and see a local definition. Masking affects one side at a time.",
     "description": "Popup blur display hint"
   },
   "reviewButton": {

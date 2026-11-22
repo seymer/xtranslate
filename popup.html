@@ -220,12 +220,18 @@
     </label>
   </div>
   <div class="row">
+    <label for="glossEnabled">
+      <span data-i18n="glossLabel">下划线查词</span>
+      <input type="checkbox" id="glossEnabled" />
+    </label>
+  </div>
+  <div class="row">
     <button id="reviewButton" class="review-btn" data-i18n="reviewButton">每日复习（0）</button>
   </div>
   <p class="hint">
     <span data-i18n="hintToggle">快捷键：</span><kbd>Alt</kbd> + <kbd>B</kbd><br />
     <span data-i18n="hintCollapse">点「翻译自 xxx」可折叠译文。</span><br />
-    <span data-i18n="hintBlur">同一时间只遮挡一侧，悬停约 0.5 秒显示。</span>
+    <span data-i18n="hintBlur">关键词带下划线；悬停约 0.5 秒显示并弹出本地释义。遮挡同一时间只作用于一侧。</span>
   </p>
   <script src="saved-tweets.js"></script>
   <script src="popup.js"></script>

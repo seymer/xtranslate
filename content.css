@@ -210,3 +210,55 @@ html.xtl-mask-dotted {
     transition: none;
   }
 }
+
+/* ---- 下划线查词：关键词始终带淡点状下划线，hover 弹出释义 ---- */
+html.xtl-gloss-on .xtl-keyword {
+  text-decoration: underline dotted rgba(29, 155, 240, 0.75);
+  text-underline-offset: 3px;
+}
+
+/* 当前被遮挡的一侧不需要下划线，hover 揭示即可 */
+html.xtl-gloss-on.xtl-blur-orig .xtl-keyword.xtl-mask-orig,
+html.xtl-gloss-on.xtl-blur-trans .xtl-keyword.xtl-mask-trans {
+  text-decoration: none;
+}
+
+/* ---- 悬停释义浮层 ---- */
+.xtl-gloss {
+  position: fixed;
+  z-index: 2147483647;
+  max-width: 320px;
+  padding: 8px 10px;
+  color: #e7e9ea;
+  background: rgba(21, 32, 43, 0.97);
+  border: 1px solid #38444d;
+  border-left: 3px solid #1d9bf0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  font-size: 13px;
+  line-height: 18px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.xtl-gloss-visible {
+  opacity: 1;
+}
+.xtl-gloss-head {
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.xtl-gloss-body {
+  color: #cfd9e3;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.xtl-gloss-meta {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid #38444d;
+  color: #71767b;
+  font-size: 11px;
+  line-height: 14px;
+}

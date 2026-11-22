@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "__MSG_extDesc__",
   "default_locale": "zh_CN",
   "icons": {
@@ -28,10 +28,16 @@
       "128": "icons/icon128.png"
     }
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["data/*.json"],
+      "matches": ["https://x.com/*", "https://twitter.com/*"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": ["https://x.com/*", "https://twitter.com/*"],
-      "js": ["saved-tweets.js", "keyword-mask.js", "content.js"],
+      "js": ["saved-tweets.js", "keyword-mask.js", "dictionary.js", "content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
     }

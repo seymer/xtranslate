@@ -5,6 +5,7 @@ const transColor = document.getElementById('transColor');
 const blurMode = document.getElementById('blurMode');
 const maskScope = document.getElementById('maskScope');
 const maskStyle = document.getElementById('maskStyle');
+const glossEnabled = document.getElementById('glossEnabled');
 const langBtns = document.querySelectorAll('.lang-btn');
 const reviewButton = document.getElementById('reviewButton');
 
@@ -46,7 +47,7 @@ async function setManualLang(lang) {
 }
 
 // 初始化：读取当前状态（默认开启 + 逐句模式 + 默认蓝 + 不模糊 + 自动语言）
-chrome.storage.local.get(['enabled', 'mode', 'transColor', 'blurMode', 'maskScope', 'maskStyle', 'lang'], (d) => {
+chrome.storage.local.get(['enabled', 'mode', 'transColor', 'blurMode', 'maskScope', 'maskStyle', 'glossEnabled', 'lang'], (d) => {
   toggle.checked = d.enabled !== false;
   const currentMode = d.mode === 'block' ? 'block' : 'interleave';
   modeBtns.forEach((btn) => {
@@ -58,6 +59,7 @@ chrome.storage.local.get(['enabled', 'mode', 'transColor', 'blurMode', 'maskScop
   maskScope.value = d.maskScope === 'sentence' ? 'sentence' : 'keyword';
   const maskStyles = ['blur-soft', 'blur', 'blur-strong', 'bar', 'dotted'];
   maskStyle.value = maskStyles.includes(d.maskStyle) ? d.maskStyle : 'blur';
+  glossEnabled.checked = d.glossEnabled !== false;
 
   manualLang = d.lang === 'zh_CN' || d.lang === 'en' ? d.lang : 'zh_CN';
   langBtns.forEach((btn) => {
@@ -121,6 +123,13 @@ maskStyle.addEventListener('change', () => {
     : 'blur';
   chrome.storage.local.set({ maskStyle: style });
   sendMessage({ type: 'XTL_MASK_STYLE', maskStyle: style });
+});
+
+// 悬停关键词时显示本地词典释义
+glossEnabled.addEventListener('change', () => {
+  const value = glossEnabled.checked;
+  chrome.storage.local.set({ glossEnabled: value });
+  sendMessage({ type: 'XTL_GLOSS', glossEnabled: value });
 });
 
 // 切换界面语言，重载弹窗使其生效
