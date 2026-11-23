@@ -155,7 +155,7 @@
   display: none;
 }
 
-/* ---- 模糊 / 遮挡：悬停约 0.5 秒后显示，移开立即恢复 ---- */
+/* ---- 模糊 / 遮挡：悬停立即显示，移开立即恢复 ---- */
 html.xtl-blur-orig .xtl-mask-orig,
 html.xtl-blur-trans .xtl-mask-trans {
   filter: var(--xtl-mask-filter, blur(5px));
@@ -181,7 +181,7 @@ html.xtl-blur-trans .xtl-mask-trans:hover {
   filter: none;
   background-color: transparent;
   border-bottom-color: transparent;
-  transition-delay: var(--xtl-mask-delay, 0.5s);
+  transition-delay: 0s;
 }
 
 /* 悬停整句时，揭示该句里所有被遮挡的关键词 */
@@ -190,7 +190,7 @@ html.xtl-blur-trans .xtl-mask-has:hover .xtl-mask-trans {
   filter: none;
   background-color: transparent;
   border-bottom-color: transparent;
-  transition-delay: var(--xtl-mask-delay, 0.5s);
+  transition-delay: 0s;
 }
 
 /* 遮挡风格：模糊强度 / 色块 / 虚线下划线 */
