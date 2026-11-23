@@ -531,6 +531,7 @@
   function decorateMask(el, side) {
     if (!el) return;
     const hasKeywords = maskKeywordsInElement(el, side);
+    if (hasKeywords) el.classList.add('xtl-mask-has');
     if (maskScope === 'sentence' || !hasKeywords) {
       el.classList.add('xtl-mask-' + side);
     }

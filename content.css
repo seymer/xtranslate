@@ -184,6 +184,15 @@ html.xtl-blur-trans .xtl-mask-trans:hover {
   transition-delay: var(--xtl-mask-delay, 0.5s);
 }
 
+/* 悬停整句时，揭示该句里所有被遮挡的关键词 */
+html.xtl-blur-orig .xtl-mask-has:hover .xtl-mask-orig,
+html.xtl-blur-trans .xtl-mask-has:hover .xtl-mask-trans {
+  filter: none;
+  background-color: transparent;
+  border-bottom-color: transparent;
+  transition-delay: var(--xtl-mask-delay, 0.5s);
+}
+
 /* 遮挡风格：模糊强度 / 色块 / 虚线下划线 */
 html.xtl-mask-blur-soft {
   --xtl-mask-filter: blur(3px);
