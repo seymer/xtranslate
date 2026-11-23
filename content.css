@@ -212,15 +212,21 @@ html.xtl-mask-dotted {
 }
 
 /* ---- 下划线查词：关键词始终带淡点状下划线，hover 弹出释义 ---- */
-html.xtl-gloss-on .xtl-keyword {
+html.xtl-gloss-on .xtl-keyword-en {
   text-decoration: underline dotted rgba(29, 155, 240, 0.75);
   text-underline-offset: 3px;
 }
 
 /* 当前被遮挡的一侧不需要下划线，hover 揭示即可 */
-html.xtl-gloss-on.xtl-blur-orig .xtl-keyword.xtl-mask-orig,
-html.xtl-gloss-on.xtl-blur-trans .xtl-keyword.xtl-mask-trans {
+html.xtl-gloss-on.xtl-blur-orig .xtl-keyword-en.xtl-mask-orig,
+html.xtl-gloss-on.xtl-blur-trans .xtl-keyword-en.xtl-mask-trans {
   text-decoration: none;
+}
+
+/* 遮挡关键词用 inline-block，确保 filter 在所有浏览器下都生效 */
+html.xtl-blur-orig .xtl-keyword.xtl-mask-orig,
+html.xtl-blur-trans .xtl-keyword.xtl-mask-trans {
+  display: inline-block;
 }
 
 /* ---- 悬停释义浮层 ---- */

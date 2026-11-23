@@ -530,8 +530,6 @@
 
   function decorateMask(el, side) {
     if (!el) return;
-    // 只对英文做遮挡/查词；中文等非英文内容保持原样。
-    if (isNonEnglishText(el.textContent || '')) return;
     const hasKeywords = maskKeywordsInElement(el, side);
     if (maskScope === 'sentence' || !hasKeywords) {
       el.classList.add('xtl-mask-' + side);
@@ -570,7 +568,8 @@
           continue;
         }
         const span = document.createElement('span');
-        span.className = 'xtl-keyword xtl-mask-' + side;
+        const isEnglish = !isNonEnglishText(part.text);
+        span.className = 'xtl-keyword xtl-mask-' + side + (isEnglish ? ' xtl-keyword-en' : '');
         span.textContent = part.text;
         fragment.appendChild(span);
       }
@@ -697,9 +696,8 @@
   function insertWrap(tweetText, wrap, hide) {
     if (!tweetText.isConnected) return;
     tweetText.classList.toggle('xtl-hidden', !!hide);
-    // block 模式下原文就是官方 tweetText；只对英文整块遮挡，非英文保持原样。
-    const englishSource = !isNonEnglishText(tweetText.textContent || '');
-    tweetText.classList.toggle('xtl-mask-orig', !hide && englishSource);
+    // block 模式下原文就是官方 tweetText；整块遮挡不区分语言。
+    tweetText.classList.toggle('xtl-mask-orig', !hide);
     tweetText.parentElement.insertBefore(wrap, tweetText.nextSibling);
   }
 
